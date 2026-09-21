@@ -84,10 +84,12 @@ export function DiscoverPeopleModal({
 
   const handleAcceptRequest = async (friendshipId: string, userId: string) => {
     try {
-      await api.acceptFriendRequest(friendshipId);
+      const res = await api.acceptFriendRequest(friendshipId);
       setPendingRequests((prev) => prev.filter((r) => r.id !== friendshipId));
-      loadData();
+      await loadData();
+      // Start chat after a brief delay to let conversation get created
       onStartChat(userId);
+      onClose();
     } catch (err) {
       alert('Could not accept friend request');
     }

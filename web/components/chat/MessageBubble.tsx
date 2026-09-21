@@ -124,8 +124,8 @@ export function MessageBubble({ message, onReply, onEdit, onDelete, onReact, onB
     }
   };
 
-  // Group reactions count
-  const reactionCounts = message.reactions.reduce((acc: Record<string, number>, r) => {
+  // Group reactions count (safe fallback for undefined reactions)
+  const reactionCounts = (message.reactions ?? []).reduce((acc: Record<string, number>, r) => {
     acc[r.emoji] = (acc[r.emoji] || 0) + 1;
     return acc;
   }, {});

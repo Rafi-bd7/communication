@@ -2,14 +2,11 @@
 
 import { 
   MessageSquare, 
-  CircleDashed, 
-  Phone, 
   Sparkles, 
   ShieldAlert, 
   Settings, 
   LogOut, 
   Smartphone,
-  Home,
   Languages,
   UserPlus,
   Globe
@@ -43,11 +40,8 @@ export function AppSidebar({
   const { lang, toggleLanguage, t } = useLanguage();
 
   const navItems = [
-    { id: 'chats', label: lang === 'bn' ? 'মেসেঞ্জার চ্যাট' : 'Messenger Chats', icon: MessageSquare },
-    { id: 'feed', label: lang === 'bn' ? 'ফেসবুক টাইমলাইন' : 'Facebook Feed', icon: Globe },
-    { id: 'addabari', label: t.navAddabari, icon: Home },
-    { id: 'status', label: t.navStories, icon: CircleDashed },
-    { id: 'calls', label: t.navCalls, icon: Phone },
+    { id: 'chats', label: lang === 'bn' ? 'চ্যাট ও মেসেজ' : 'Chats & Messages', icon: MessageSquare },
+    { id: 'feed', label: lang === 'bn' ? 'নিউজফিড' : 'Newsfeed', icon: Globe },
   ];
 
   return (

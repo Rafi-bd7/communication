@@ -112,13 +112,27 @@ def get_system_lan_ip():
 
 @app.get("/api/system/network-info")
 async def get_network_info():
+    import os
     ip = get_system_lan_ip()
+    
+    # Read public tunnel URL from env var or from tunnel.txt file written by cloudflared
+    public_url = os.environ.get("ADDA_PUBLIC_URL", "")
+    if not public_url:
+        tunnel_file = os.path.join(os.path.dirname(__file__), "..", "tunnel_url.txt")
+        try:
+            if os.path.exists(tunnel_file):
+                with open(tunnel_file, "r") as f:
+                    public_url = f.read().strip()
+        except Exception:
+            pass
+    
     return {
         "lan_ip": ip,
         "frontend_port": 3000,
         "backend_port": 8000,
         "frontend_url": f"http://{ip}:3000",
-        "backend_url": f"http://{ip}:8000"
+        "backend_url": f"http://{ip}:8000",
+        "public_url": public_url or None,
     }
 
 # WebSocket Endpoint for Real-time Messaging & WebRTC Signaling

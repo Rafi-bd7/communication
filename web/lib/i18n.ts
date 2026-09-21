@@ -246,12 +246,16 @@ export const translations = {
 };
 
 export function useLanguage() {
-  const [lang, setLangState] = useState<Language>('bn');
+  // Default to English; user can switch to Bengali from settings
+  const [lang, setLangState] = useState<Language>('en');
 
   useEffect(() => {
     const saved = localStorage.getItem('adda_lang') as Language;
     if (saved === 'bn' || saved === 'en') {
       setLangState(saved);
+    } else {
+      // First visit - set English as default
+      localStorage.setItem('adda_lang', 'en');
     }
   }, []);
 

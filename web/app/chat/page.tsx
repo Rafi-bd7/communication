@@ -81,6 +81,8 @@ export default function ChatPage() {
       setIsDiscoverPeopleOpen(false);
       setIsUserProfileOpen(false);
       setIsTimelineFeedOpen(false);
+      // Also refresh the full conversations list
+      setTimeout(() => loadConversations(), 500);
     } catch (err) {
       console.error('Failed to create direct chat:', err);
     }
