@@ -363,8 +363,9 @@ export default function ChatPage() {
           return c;
         })
       );
-    } catch (err) {
-      alert('Failed to send message');
+    } catch (err: any) {
+      console.error('Failed to send message:', err);
+      alert(err.message || 'Failed to send message');
     }
   };
 

@@ -81,7 +81,7 @@ class ConversationResponse(BaseModel):
 
 # Message
 class MessageCreate(BaseModel):
-    conversation_id: str
+    conversation_id: Optional[str] = None
     content: str
     message_type: str = "text"
     reply_to_id: Optional[str] = None

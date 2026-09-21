@@ -74,7 +74,7 @@ export const api = {
     file_url?: string;
     file_name?: string;
     file_size?: number;
-  }) => request(`/conversations/${conversationId}/messages`, { method: 'POST', body: JSON.stringify(data) }),
+  }) => request(`/conversations/${conversationId}/messages`, { method: 'POST', body: JSON.stringify({ ...data, conversation_id: conversationId }) }),
   editMessage: (messageId: string, content: string) => 
     request(`/messages/${messageId}`, { method: 'PATCH', body: JSON.stringify({ content }) }),
   deleteMessage: (messageId: string) => request(`/messages/${messageId}`, { method: 'DELETE' }),

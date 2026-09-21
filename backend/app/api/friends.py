@@ -9,6 +9,7 @@ from app.core.database import get_db
 from app.core.security import get_current_user
 from app.models.models import User, Friendship, Conversation, ConversationMember
 from app.schemas.schemas import UserResponse
+from app.services.chat_service import get_or_create_direct_conversation
 
 router = APIRouter(prefix="/friends", tags=["friends"])
 
@@ -135,25 +136,7 @@ async def accept_friend_request(
 
     # Ensure a direct conversation exists between the two users
     other_user_id = rel.requester_id
-    # Check existing conversation
-    query = (
-        select(Conversation)
-        .join(ConversationMember)
-        .where(Conversation.type == "direct")
-        .where(ConversationMember.user_id.in_([current_user.id, other_user_id]))
-        .group_by(Conversation.id)
-    )
-    result = await db.execute(query)
-    conv = result.scalar_one_or_none()
-
-    if not conv:
-        conv = Conversation(type="direct", created_by=current_user.id)
-        db.add(conv)
-        await db.flush()
-
-        member1 = ConversationMember(conversation_id=conv.id, user_id=current_user.id, role="member")
-        member2 = ConversationMember(conversation_id=conv.id, user_id=other_user_id, role="member")
-        db.add_all([member1, member2])
+    conv = await get_or_create_direct_conversation(db, current_user.id, other_user_id)
 
     await db.commit()
     return {"message": "Friend request accepted", "status": "friends", "conversation_id": conv.id}

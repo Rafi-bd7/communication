@@ -27,6 +27,10 @@ ENV/
 *.db
 *.db-journal
 
+# Uploads
+backend/uploads/*
+!backend/uploads/.gitkeep
+
 # Local Environment Variables
 .env
 .env.local
