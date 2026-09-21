@@ -150,3 +150,28 @@ class Report(Base):
     reason = Column(Text, nullable=False)
     status = Column(String(20), default="pending")  # pending, resolved, dismissed
     created_at = Column(DateTime, default=utc_now)
+
+class Friendship(Base):
+    __tablename__ = "friendships"
+
+    id = Column(String(36), primary_key=True, default=generate_uuid)
+    requester_id = Column(String(36), ForeignKey("users.id"), nullable=False)
+    receiver_id = Column(String(36), ForeignKey("users.id"), nullable=False)
+    status = Column(String(20), default="pending")  # pending, accepted, declined
+    created_at = Column(DateTime, default=utc_now)
+    updated_at = Column(DateTime, default=utc_now, onupdate=utc_now)
+
+    requester = relationship("User", foreign_keys=[requester_id])
+    receiver = relationship("User", foreign_keys=[receiver_id])
+
+class Post(Base):
+    __tablename__ = "posts"
+
+    id = Column(String(36), primary_key=True, default=generate_uuid)
+    user_id = Column(String(36), ForeignKey("users.id"), nullable=False)
+    content = Column(Text, nullable=False)
+    media_url = Column(String(255), nullable=True)
+    likes_count = Column(Integer, default=0)
+    created_at = Column(DateTime, default=utc_now)
+
+    author = relationship("User")

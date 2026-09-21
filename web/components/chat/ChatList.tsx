@@ -43,6 +43,8 @@ interface ChatListProps {
   onSelectConversation: (conv: ConversationItem) => void;
   onNewChatCreated: (conv: ConversationItem) => void;
   onOpenQuickAdda?: () => void;
+  onOpenDiscoverPeople?: () => void;
+  onOpenProfile?: (user: any) => void;
 }
 
 export function ChatList({
@@ -51,6 +53,8 @@ export function ChatList({
   onSelectConversation,
   onNewChatCreated,
   onOpenQuickAdda,
+  onOpenDiscoverPeople,
+  onOpenProfile,
 }: ChatListProps) {
   const { user } = useAuth();
   const { t, lang } = useLanguage();
@@ -236,6 +240,18 @@ export function ChatList({
             <Users className="w-4 h-4" />
           </button>
 
+          {/* Discover People & Add Friends */}
+          {onOpenDiscoverPeople && (
+            <button
+              type="button"
+              onClick={onOpenDiscoverPeople}
+              title={lang === 'bn' ? '👥 মানুষ খুঁজুন ও ফ্রেন্ড রিকোয়েস্ট পাঠান' : '👥 Discover People & Add Friends'}
+              className="p-2 rounded-xl text-sky-400 bg-sky-500/10 hover:bg-sky-500/20 transition-colors"
+            >
+              <UserPlus className="w-4 h-4" />
+            </button>
+          )}
+
           <button
             type="button"
             onClick={openNewChat}
@@ -282,15 +298,27 @@ export function ChatList({
       {/* Conversation List */}
       <div className="flex-1 overflow-y-auto divide-y divide-brand-border/20">
         {filteredConversations.length === 0 ? (
-          <div className="flex flex-col items-center justify-center p-8 text-center text-gray-400">
-            <p className="text-xs">{lang === 'bn' ? 'কোনো আড্ডা পাওয়া যায়নি।' : 'No conversations found.'}</p>
-            <button
-              type="button"
-              onClick={openNewChat}
-              className="mt-3 text-xs text-brand-emerald font-semibold hover:underline"
-            >
-              {lang === 'bn' ? 'নতুন আড্ডা শুরু করুন' : 'Start a new conversation'}
-            </button>
+          <div className="flex flex-col items-center justify-center p-6 text-center text-gray-400 gap-3">
+            <p className="text-xs">{lang === 'bn' ? 'কোনো মেসেজ নেই।' : 'No conversations found.'}</p>
+            <div className="flex flex-col gap-2 w-full max-w-xs">
+              {onOpenDiscoverPeople && (
+                <button
+                  type="button"
+                  onClick={onOpenDiscoverPeople}
+                  className="w-full py-2 px-3 rounded-xl bg-gradient-to-r from-sky-500 to-blue-600 hover:brightness-110 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-lg shadow-sky-500/20 transition-all active:scale-95"
+                >
+                  <UserPlus className="w-3.5 h-3.5" />
+                  <span>{lang === 'bn' ? '👥 মানুষ খুঁজুন ও ফ্রেন্ড রিকোয়েস্ট পাঠান' : '👥 Discover People & Friends'}</span>
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={openNewChat}
+                className="w-full py-2 px-3 rounded-xl bg-[#202c33] hover:bg-[#2a3942] text-xs text-brand-emerald font-semibold border border-brand-border transition-colors"
+              >
+                {lang === 'bn' ? '১-অন-১ আড্ডা শুরু করুন' : 'Start a new conversation'}
+              </button>
+            </div>
           </div>
         ) : (
           filteredConversations.map((conv) => {
@@ -307,14 +335,24 @@ export function ChatList({
                   isSelected ? 'bg-[#202c33]' : 'hover:bg-[#182229]'
                 }`}
               >
-                {/* Avatar with live online dot */}
-                <UserAvatar
-                  name={title}
-                  avatarUrl={conv.avatar_url || otherMember?.avatar_url}
-                  size="lg"
-                  showOnline={conv.type === 'direct'}
-                  isOnline={Boolean(isOnline)}
-                />
+                {/* Avatar with live online dot - click opens profile */}
+                <div
+                  onClick={(e) => {
+                    if (otherMember && onOpenProfile) {
+                      e.stopPropagation();
+                      onOpenProfile(otherMember);
+                    }
+                  }}
+                  title={otherMember ? (lang === 'bn' ? `${otherMember.full_name} এর প্রোফাইল দেখুন` : `View Profile`) : undefined}
+                >
+                  <UserAvatar
+                    name={title}
+                    avatarUrl={conv.avatar_url || otherMember?.avatar_url}
+                    size="lg"
+                    showOnline={conv.type === 'direct'}
+                    isOnline={Boolean(isOnline)}
+                  />
+                </div>
 
                 {/* Info & Last Message */}
                 <div className="flex-1 min-w-0">

@@ -35,6 +35,7 @@ interface ChatWindowProps {
   onTyping: (isTyping: boolean) => void;
   onOpenSharedBoard?: () => void;
   onBookmarkMessage?: (message: MessageItem) => void;
+  onOpenProfile?: (user: any) => void;
 }
 
 export function ChatWindow({
@@ -51,6 +52,7 @@ export function ChatWindow({
   onTyping,
   onOpenSharedBoard,
   onBookmarkMessage,
+  onOpenProfile,
 }: ChatWindowProps) {
   const { user } = useAuth();
   const { t, lang } = useLanguage();
@@ -109,42 +111,52 @@ export function ChatWindow({
             <ArrowLeft className="w-5 h-5" />
           </button>
 
-          {/* Avatar with Status */}
-          <UserAvatar
-            name={title}
-            avatarUrl={conversation.avatar_url || otherMember?.avatar_url}
-            size="md"
-            showOnline={Boolean(isDirect)}
-            isOnline={Boolean(otherMember?.is_online)}
-          />
+          {/* Avatar with Status & Profile Trigger */}
+          <div 
+            onClick={() => {
+              if (isDirect && otherMember && onOpenProfile) {
+                onOpenProfile(otherMember);
+              }
+            }}
+            className={`flex items-center gap-3 min-w-0 ${isDirect ? 'cursor-pointer hover:opacity-90 transition-opacity' : ''}`}
+            title={isDirect && otherMember ? (lang === 'bn' ? `${otherMember.full_name} এর ফেসবুক প্রোফাইল দেখুন` : 'View Profile') : undefined}
+          >
+            <UserAvatar
+              name={title}
+              avatarUrl={conversation.avatar_url || otherMember?.avatar_url}
+              size="md"
+              showOnline={Boolean(isDirect)}
+              isOnline={Boolean(otherMember?.is_online)}
+            />
 
-          {/* Title & Status */}
-          <div className="min-w-0">
-            <div className="flex items-center gap-2">
-              <h3 className="text-sm font-bold text-white truncate">
-                {title}
-              </h3>
-              {isGroup && (
-                <span className="px-1.5 py-0.2 rounded-md bg-purple-500/20 text-purple-300 font-semibold text-[10px] hidden sm:inline-block">
-                  {lang === 'bn' ? 'রুম' : 'Room'}
-                </span>
-              )}
-            </div>
-            <p className="text-[11px] text-gray-400 truncate">
-              {typingUsers.length > 0 ? (
-                <span className="text-brand-emerald font-medium animate-pulse">
-                  {t.typing}
-                </span>
-              ) : isDirect ? (
-                otherMember?.is_online ? (
-                  <span className="text-emerald-400 font-medium">{t.online}</span>
+            {/* Title & Status */}
+            <div className="min-w-0">
+              <div className="flex items-center gap-2">
+                <h3 className="text-sm font-bold text-white truncate hover:underline">
+                  {title}
+                </h3>
+                {isGroup && (
+                  <span className="px-1.5 py-0.2 rounded-md bg-purple-500/20 text-purple-300 font-semibold text-[10px] hidden sm:inline-block">
+                    {lang === 'bn' ? 'রুম' : 'Room'}
+                  </span>
+                )}
+              </div>
+              <p className="text-[11px] text-gray-400 truncate">
+                {typingUsers.length > 0 ? (
+                  <span className="text-brand-emerald font-medium animate-pulse">
+                    {t.typing}
+                  </span>
+                ) : isDirect ? (
+                  otherMember?.is_online ? (
+                    <span className="text-emerald-400 font-medium">{t.online}</span>
+                  ) : (
+                    t.offline
+                  )
                 ) : (
-                  t.offline
-                )
-              ) : (
-                `${conversation.members?.length || 0} ${lang === 'bn' ? 'জন সদস্য' : 'members'}`
-              )}
-            </p>
+                  `${conversation.members?.length || 0} ${lang === 'bn' ? 'জন সদস্য' : 'members'}`
+                )}
+              </p>
+            </div>
           </div>
         </div>
 

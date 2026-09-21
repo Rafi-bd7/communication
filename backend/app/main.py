@@ -24,6 +24,8 @@ from app.api.statuses import router as statuses_router
 from app.api.ai import router as ai_router
 from app.api.admin import router as admin_router
 from app.api.reports import router as reports_router
+from app.api.friends import router as friends_router
+from app.api.posts import router as posts_router
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("adda-platform")
@@ -84,6 +86,8 @@ app.include_router(statuses_router, prefix=settings.API_V1_STR)
 app.include_router(ai_router, prefix=settings.API_V1_STR)
 app.include_router(admin_router, prefix=settings.API_V1_STR)
 app.include_router(reports_router, prefix=settings.API_V1_STR)
+app.include_router(friends_router, prefix=settings.API_V1_STR)
+app.include_router(posts_router, prefix=settings.API_V1_STR)
 
 @app.get("/")
 async def root():

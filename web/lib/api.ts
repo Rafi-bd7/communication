@@ -152,4 +152,19 @@ export const api = {
 
   // System
   getNetworkInfo: () => request('/system/network-info'),
+
+  // Friends & Social Community (Facebook Features)
+  getFriendSuggestions: () => request('/friends/suggestions'),
+  sendFriendRequest: (userId: string) => request(`/friends/request/${userId}`, { method: 'POST' }),
+  acceptFriendRequest: (friendshipId: string) => request(`/friends/accept/${friendshipId}`, { method: 'POST' }),
+  declineFriendRequest: (friendshipId: string) => request(`/friends/decline/${friendshipId}`, { method: 'POST' }),
+  getMyFriends: () => request('/friends/my-friends'),
+  getPendingRequests: () => request('/friends/requests'),
+
+  // Timeline Posts (Facebook Features)
+  getTimelineFeed: () => request('/posts/feed'),
+  createPost: (data: { content: string; media_url?: string }) =>
+    request('/posts/', { method: 'POST', body: JSON.stringify(data) }),
+  likePost: (postId: string) => request(`/posts/${postId}/like`, { method: 'POST' }),
+  getUserPosts: (userId: string) => request(`/posts/user/${userId}`),
 };

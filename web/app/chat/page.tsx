@@ -24,6 +24,11 @@ import { SettingsModal } from '@/components/settings/SettingsModal';
 import { DeviceConnectModal } from '@/components/layout/DeviceConnectModal';
 import { MessageItem } from '@/components/chat/MessageBubble';
 
+// Adda Social (Facebook + Messenger + WhatsApp) Components
+import { DiscoverPeopleModal } from '@/components/social/DiscoverPeopleModal';
+import { UserProfileModal } from '@/components/social/UserProfileModal';
+import { TimelineFeedDrawer } from '@/components/social/TimelineFeedDrawer';
+
 // Adda Unique Components
 import { AddabariDashboard } from '@/components/adda/AddabariDashboard';
 import { QuickAddaModal } from '@/components/adda/QuickAddaModal';
@@ -56,6 +61,35 @@ export default function ChatPage() {
   const [isQuickAddaOpen, setIsQuickAddaOpen] = useState(false);
   const [isSharedBoardOpen, setIsSharedBoardOpen] = useState(false);
   const [isCollectionsOpen, setIsCollectionsOpen] = useState(false);
+
+  // Social: Facebook Profile, Discover People & Timeline Feed
+  const [isDiscoverPeopleOpen, setIsDiscoverPeopleOpen] = useState(false);
+  const [isTimelineFeedOpen, setIsTimelineFeedOpen] = useState(false);
+  const [selectedProfileUser, setSelectedProfileUser] = useState<any | null>(null);
+  const [isUserProfileOpen, setIsUserProfileOpen] = useState(false);
+
+  const handleStartDirectChat = async (targetUserId: string) => {
+    try {
+      const conv = await api.createDirectChat(targetUserId);
+      setConversations((prev) => {
+        const existing = prev.find((c) => c.id === conv.id);
+        if (existing) return prev;
+        return [conv, ...prev];
+      });
+      setActiveConversation(conv);
+      setActiveTab('chats');
+      setIsDiscoverPeopleOpen(false);
+      setIsUserProfileOpen(false);
+      setIsTimelineFeedOpen(false);
+    } catch (err) {
+      console.error('Failed to create direct chat:', err);
+    }
+  };
+
+  const handleOpenUserProfile = (userToView: any) => {
+    setSelectedProfileUser(userToView);
+    setIsUserProfileOpen(true);
+  };
 
   // Saved Messages Collection
   const [savedMessages, setSavedMessages] = useState<SavedMessageItem[]>([]);
@@ -433,13 +467,27 @@ export default function ChatPage() {
 
   return (
     <div className="flex h-screen w-screen overflow-hidden bg-[#0b141a] text-white">
-      {/* 1. App Sidebar */}
+      {/* 1. App Sidebar Navigation */}
       <AppSidebar
         activeTab={activeTab}
-        setActiveTab={setActiveTab}
+        setActiveTab={(tab) => {
+          if (tab === 'feed') {
+            setIsTimelineFeedOpen(true);
+          } else {
+            setActiveTab(tab);
+          }
+        }}
         openAI={() => setIsAIOpen(true)}
         openSettings={() => setIsSettingsOpen(true)}
         openDeviceConnect={() => setIsDeviceConnectOpen(true)}
+        openDiscoverPeople={() => setIsDiscoverPeopleOpen(true)}
+        openTimeline={() => setIsTimelineFeedOpen(true)}
+        openMyProfile={() => {
+          if (user) {
+            setSelectedProfileUser(user);
+            setIsUserProfileOpen(true);
+          }
+        }}
       />
 
       {/* 2. Main Content Area */}
@@ -465,6 +513,8 @@ export default function ChatPage() {
                   setActiveConversation(newConv);
                 }}
                 onOpenQuickAdda={() => setIsQuickAddaOpen(true)}
+                onOpenDiscoverPeople={() => setIsDiscoverPeopleOpen(true)}
+                onOpenProfile={handleOpenUserProfile}
               />
             </div>
 
@@ -484,6 +534,7 @@ export default function ChatPage() {
                 onTyping={handleTypingEvent}
                 onOpenSharedBoard={() => setIsSharedBoardOpen(true)}
                 onBookmarkMessage={handleSaveToCollections}
+                onOpenProfile={handleOpenUserProfile}
               />
             ) : (
               <div className="hidden md:flex flex-1 h-full flex-col items-center justify-center bg-[#111b21] p-8 text-center text-gray-400 select-none border-l border-[#2a3942]">
@@ -638,6 +689,31 @@ export default function ChatPage() {
       <DeviceConnectModal
         isOpen={isDeviceConnectOpen}
         onClose={() => setIsDeviceConnectOpen(false)}
+      />
+
+      {/* Facebook Style: Discover People & Friend Requests */}
+      <DiscoverPeopleModal
+        isOpen={isDiscoverPeopleOpen}
+        onClose={() => setIsDiscoverPeopleOpen(false)}
+        onStartChat={handleStartDirectChat}
+        onViewProfile={handleOpenUserProfile}
+      />
+
+      {/* Facebook Style: User Public/Private Profile */}
+      <UserProfileModal
+        user={selectedProfileUser}
+        isOpen={isUserProfileOpen}
+        onClose={() => setIsUserProfileOpen(false)}
+        onStartChat={handleStartDirectChat}
+        onStartCall={(target, type) => handleStartCall(type, target)}
+      />
+
+      {/* Facebook Style: Timeline Feed & Post Sharing */}
+      <TimelineFeedDrawer
+        isOpen={isTimelineFeedOpen}
+        onClose={() => setIsTimelineFeedOpen(false)}
+        onViewProfile={handleOpenUserProfile}
+        onStartChat={handleStartDirectChat}
       />
     </div>
   );

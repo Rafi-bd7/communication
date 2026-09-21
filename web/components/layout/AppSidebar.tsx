@@ -10,7 +10,9 @@ import {
   LogOut, 
   Smartphone,
   Home,
-  Languages
+  Languages,
+  UserPlus,
+  Globe
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useLanguage } from '@/lib/i18n';
@@ -22,14 +24,27 @@ interface AppSidebarProps {
   openAI: () => void;
   openSettings: () => void;
   openDeviceConnect: () => void;
+  openDiscoverPeople?: () => void;
+  openTimeline?: () => void;
+  openMyProfile?: () => void;
 }
 
-export function AppSidebar({ activeTab, setActiveTab, openAI, openSettings, openDeviceConnect }: AppSidebarProps) {
+export function AppSidebar({ 
+  activeTab, 
+  setActiveTab, 
+  openAI, 
+  openSettings, 
+  openDeviceConnect,
+  openDiscoverPeople,
+  openTimeline,
+  openMyProfile
+}: AppSidebarProps) {
   const { user, logout } = useAuth();
   const { lang, toggleLanguage, t } = useLanguage();
 
   const navItems = [
-    { id: 'chats', label: t.navChats, icon: MessageSquare },
+    { id: 'chats', label: lang === 'bn' ? 'মেসেঞ্জার চ্যাট' : 'Messenger Chats', icon: MessageSquare },
+    { id: 'feed', label: lang === 'bn' ? 'ফেসবুক টাইমলাইন' : 'Facebook Feed', icon: Globe },
     { id: 'addabari', label: t.navAddabari, icon: Home },
     { id: 'status', label: t.navStories, icon: CircleDashed },
     { id: 'calls', label: t.navCalls, icon: Phone },
@@ -84,6 +99,18 @@ export function AppSidebar({ activeTab, setActiveTab, openAI, openSettings, open
               </button>
             );
           })}
+
+          {/* Discover People & Add Friends (Facebook Style) */}
+          {openDiscoverPeople && (
+            <button
+              onClick={openDiscoverPeople}
+              title={lang === 'bn' ? '👥 মানুষ খুঁজুন ও ফ্রেন্ড রিকোয়েস্ট পাঠান' : '👥 Discover People & Add Friends'}
+              className="relative w-12 h-12 rounded-2xl flex items-center justify-center text-sky-400 hover:text-sky-300 hover:bg-sky-500/15 transition-all duration-200 group"
+            >
+              <UserPlus className="w-5 h-5 transition-transform group-hover:scale-110" />
+              <span className="absolute top-2.5 right-2.5 w-2 h-2 rounded-full bg-sky-400 animate-pulse" />
+            </button>
+          )}
 
           {/* AI Assistant Button */}
           <button
@@ -142,9 +169,9 @@ export function AppSidebar({ activeTab, setActiveTab, openAI, openSettings, open
 
         <div className="pt-2 border-t border-brand-border w-full flex justify-center">
           <div 
-            onClick={openSettings}
+            onClick={openMyProfile || openSettings}
             className="relative cursor-pointer group hover:scale-105 transition-transform"
-            title={`${user?.full_name} (@${user?.username})`}
+            title={`${user?.full_name} (@${user?.username}) — ${lang === 'bn' ? 'প্রোফাইল দেখুন' : 'View Profile'}`}
           >
             <UserAvatar
               name={user?.full_name || user?.username}
