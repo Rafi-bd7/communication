@@ -30,9 +30,10 @@ export function useSocket(handlers: SocketEventHandlers = {}) {
     }
 
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    // When in dev, connect directly to port 8000
-    const host = window.location.hostname;
-    const wsUrl = `${protocol}//${host}:8000/ws?token=${token}`;
+    const isLocalDev = window.location.port === '3000' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.hostname.startsWith('192.168.'));
+    const wsUrl = isLocalDev 
+      ? `${protocol}//${window.location.hostname}:8000/ws?token=${token}`
+      : `${protocol}//${window.location.host}/ws?token=${token}`;
 
     let socket: WebSocket;
     let reconnectTimeout: any = null;
