@@ -1,0 +1,162 @@
+'use client';
+
+import { 
+  MessageSquare, 
+  CircleDashed, 
+  Phone, 
+  Sparkles, 
+  ShieldAlert, 
+  Settings, 
+  LogOut, 
+  Smartphone,
+  Home,
+  Languages
+} from 'lucide-react';
+import { useAuth } from '@/hooks/useAuth';
+import { useLanguage } from '@/lib/i18n';
+import UserAvatar from '@/components/common/UserAvatar';
+
+interface AppSidebarProps {
+  activeTab: string;
+  setActiveTab: (tab: string) => void;
+  openAI: () => void;
+  openSettings: () => void;
+  openDeviceConnect: () => void;
+}
+
+export function AppSidebar({ activeTab, setActiveTab, openAI, openSettings, openDeviceConnect }: AppSidebarProps) {
+  const { user, logout } = useAuth();
+  const { lang, toggleLanguage, t } = useLanguage();
+
+  const navItems = [
+    { id: 'chats', label: t.navChats, icon: MessageSquare },
+    { id: 'addabari', label: t.navAddabari, icon: Home },
+    { id: 'status', label: t.navStories, icon: CircleDashed },
+    { id: 'calls', label: t.navCalls, icon: Phone },
+  ];
+
+  return (
+    <aside className="w-16 md:w-20 h-full bg-[#111b21] border-r border-brand-border flex flex-col items-center justify-between py-5 select-none z-20">
+      {/* Top Brand & Navigation */}
+      <div className="flex flex-col items-center gap-5 w-full">
+        {/* Brand Logo - Adda */}
+        <div 
+          onClick={() => setActiveTab('chats')} 
+          className="group relative w-11 h-11 rounded-2xl bg-gradient-to-tr from-brand-emerald via-emerald-400 to-teal-300 flex items-center justify-center text-brand-dark shadow-lg shadow-brand-emerald/25 cursor-pointer hover:scale-105 active:scale-95 transition-all"
+          title="Adda — স্মার্ট আলাপ, যেকোনো জায়গায়।"
+        >
+          <span className="font-extrabold text-lg tracking-tight select-none">আ</span>
+          <span className="absolute -bottom-1 -right-1 w-3 h-3 bg-brand-dark rounded-full flex items-center justify-center">
+            <span className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse" />
+          </span>
+        </div>
+
+        {/* Language Switcher (বাংলা / English) */}
+        <button
+          onClick={toggleLanguage}
+          title={lang === 'bn' ? 'Switch to English' : 'বাংলায় দেখুন'}
+          className="px-2 py-1 rounded-xl bg-[#202c33] hover:bg-[#2a3942] border border-brand-border/80 text-[11px] font-bold text-brand-emerald flex items-center gap-1 transition-all shadow-sm hover:scale-105"
+        >
+          <Languages className="w-3.5 h-3.5" />
+          <span>{lang === 'bn' ? 'বাং' : 'EN'}</span>
+        </button>
+
+        {/* Navigation Icons */}
+        <nav className="flex flex-col items-center gap-2 w-full px-2">
+          {navItems.map((item) => {
+            const Icon = item.icon;
+            const isActive = activeTab === item.id;
+            return (
+              <button
+                key={item.id}
+                onClick={() => setActiveTab(item.id)}
+                title={item.label}
+                className={`relative w-12 h-12 rounded-2xl flex items-center justify-center transition-all duration-200 group ${
+                  isActive
+                    ? 'bg-brand-emerald/15 text-brand-emerald shadow-inner'
+                    : 'text-gray-400 hover:text-white hover:bg-[#202c33]'
+                }`}
+              >
+                <Icon className={`w-5 h-5 transition-transform group-hover:scale-110 ${isActive ? 'stroke-[2.5]' : ''}`} />
+                {isActive && (
+                  <span className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-brand-emerald rounded-r-full shadow-sm shadow-brand-emerald" />
+                )}
+              </button>
+            );
+          })}
+
+          {/* AI Assistant Button */}
+          <button
+            onClick={openAI}
+            title={t.navAI}
+            className="w-12 h-12 rounded-2xl flex items-center justify-center text-purple-400 hover:text-purple-300 hover:bg-purple-500/15 transition-all duration-200 group relative"
+          >
+            <Sparkles className="w-5 h-5 transition-transform group-hover:scale-110" />
+            <span className="absolute top-2 right-2 w-2 h-2 rounded-full bg-purple-400 animate-ping" />
+          </button>
+
+          {/* Admin Panel (If User is Admin) */}
+          {user?.is_admin && (
+            <button
+              onClick={() => setActiveTab('admin')}
+              title={t.navAdmin}
+              className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all duration-200 ${
+                activeTab === 'admin'
+                  ? 'bg-amber-500/15 text-amber-400'
+                  : 'text-amber-500/70 hover:text-amber-400 hover:bg-[#202c33]'
+              }`}
+            >
+              <ShieldAlert className="w-5 h-5" />
+            </button>
+          )}
+        </nav>
+      </div>
+
+      {/* Bottom Profile & Actions */}
+      <div className="flex flex-col items-center gap-3 w-full px-2">
+        {/* Connect Phone / Mobile Access */}
+        <button
+          onClick={openDeviceConnect}
+          title={t.navDeviceConnect}
+          className="w-10 h-10 rounded-xl flex items-center justify-center text-brand-emerald bg-brand-emerald/10 hover:bg-brand-emerald/20 transition-all relative group"
+        >
+          <Smartphone className="w-5 h-5 group-hover:scale-110 transition-transform" />
+          <span className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+        </button>
+
+        <button
+          onClick={openSettings}
+          title={t.navSettings}
+          className="w-10 h-10 rounded-xl flex items-center justify-center text-gray-400 hover:text-white hover:bg-[#202c33] transition-colors"
+        >
+          <Settings className="w-5 h-5" />
+        </button>
+
+        <button
+          onClick={logout}
+          title={t.navLogout}
+          className="w-10 h-10 rounded-xl flex items-center justify-center text-red-400/80 hover:text-red-400 hover:bg-red-500/10 transition-colors"
+        >
+          <LogOut className="w-5 h-5" />
+        </button>
+
+        <div className="pt-2 border-t border-brand-border w-full flex justify-center">
+          <div 
+            onClick={openSettings}
+            className="relative cursor-pointer group hover:scale-105 transition-transform"
+            title={`${user?.full_name} (@${user?.username})`}
+          >
+            <UserAvatar
+              name={user?.full_name || user?.username}
+              avatarUrl={user?.avatar_url}
+              size="md"
+              showOnline={true}
+              isOnline={true}
+              className="ring-2 ring-brand-emerald/70"
+            />
+          </div>
+        </div>
+      </div>
+    </aside>
+  );
+}

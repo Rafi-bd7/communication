@@ -1,0 +1,24 @@
+{
+  "name": "Adda — স্মার্ট আলাপ, যেকোনো জায়গায়।",
+  "short_name": "Adda",
+  "description": "আধুনিক, নিরাপদ ও বাংলা-ফার্স্ট যোগাযোগ প্ল্যাটফর্ম — আড্ডাবাড়ি, রিয়েলটাইম চ্যাট ও কল।",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0b141a",
+  "theme_color": "#00a884",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

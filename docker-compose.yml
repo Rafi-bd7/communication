@@ -1,0 +1,34 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: adda-backend
+    ports:
+      - "8000:8000"
+    environment:
+      - SECRET_KEY=super-secret-key-change-in-production
+      - DATABASE_URL=sqlite+aiosqlite:///./communication.db
+    volumes:
+      - backend_uploads:/app/uploads
+      - backend_data:/app
+    restart: unless-stopped
+
+  web:
+    build:
+      context: ./web
+      dockerfile: Dockerfile
+    container_name: adda-web
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+volumes:
+  backend_uploads:
+  backend_data:
