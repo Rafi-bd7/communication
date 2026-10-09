@@ -35,6 +35,11 @@ class UserUpdate(BaseModel):
     bio: Optional[str] = None
     avatar_url: Optional[str] = None
     phone: Optional[str] = None
+    date_of_birth: Optional[str] = None
+    lives_in: Optional[str] = None
+    education: Optional[str] = None
+    workplace: Optional[str] = None
+    cover_url: Optional[str] = None
 
 class UserResponse(BaseModel):
     id: str
@@ -43,7 +48,12 @@ class UserResponse(BaseModel):
     phone: Optional[str] = None
     full_name: str
     avatar_url: Optional[str] = None
+    cover_url: Optional[str] = None
     bio: Optional[str] = None
+    date_of_birth: Optional[str] = None
+    lives_in: Optional[str] = None
+    education: Optional[str] = None
+    workplace: Optional[str] = None
     is_online: bool
     last_seen: Optional[datetime] = None
     is_admin: bool

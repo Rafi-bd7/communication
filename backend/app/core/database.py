@@ -41,7 +41,24 @@ async def get_db() -> AsyncGenerator[AsyncSession, None]:
         finally:
             await session.close()
 
+from sqlalchemy import text
+
 async def init_db():
     from app.models import models  # noqa
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
+
+        # Seamlessly auto-migrate new profile fields into users table without data loss
+        new_cols = [
+            ("date_of_birth", "VARCHAR(50)"),
+            ("lives_in", "VARCHAR(100)"),
+            ("education", "VARCHAR(150)"),
+            ("workplace", "VARCHAR(150)"),
+            ("cover_url", "VARCHAR(255)"),
+        ]
+        for col_name, col_type in new_cols:
+            try:
+                await conn.execute(text(f"ALTER TABLE users ADD COLUMN {col_name} {col_type}"))
+            except Exception:
+                # Column already present or migration handled
+                pass

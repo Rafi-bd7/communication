@@ -89,8 +89,18 @@ async def update_profile(
         current_user.bio = update_data.bio
     if update_data.avatar_url is not None:
         current_user.avatar_url = update_data.avatar_url
+    if update_data.cover_url is not None:
+        current_user.cover_url = update_data.cover_url
     if update_data.phone is not None:
         current_user.phone = update_data.phone
+    if update_data.date_of_birth is not None:
+        current_user.date_of_birth = update_data.date_of_birth
+    if update_data.lives_in is not None:
+        current_user.lives_in = update_data.lives_in
+    if update_data.education is not None:
+        current_user.education = update_data.education
+    if update_data.workplace is not None:
+        current_user.workplace = update_data.workplace
         
     await db.commit()
     await db.refresh(current_user)

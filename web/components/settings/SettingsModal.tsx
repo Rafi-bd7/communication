@@ -20,7 +20,11 @@ import {
   Upload,
   Palette,
   Trash2,
-  AlertTriangle
+  AlertTriangle,
+  MapPin,
+  GraduationCap,
+  Briefcase,
+  Cake
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useLanguage } from '@/lib/i18n';
@@ -45,6 +49,10 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   const [fullName, setFullName] = useState(user?.full_name || '');
   const [bio, setBio] = useState(user?.bio || '');
   const [phone, setPhone] = useState(user?.phone || '');
+  const [dateOfBirth, setDateOfBirth] = useState(user?.date_of_birth || '');
+  const [livesIn, setLivesIn] = useState(user?.lives_in || '');
+  const [education, setEducation] = useState(user?.education || '');
+  const [workplace, setWorkplace] = useState(user?.workplace || '');
   const [isSaving, setIsSaving] = useState(false);
   const [savedSuccess, setSavedSuccess] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -116,6 +124,10 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
         full_name: fullName,
         bio: bio,
         phone: phone || undefined,
+        date_of_birth: dateOfBirth || undefined,
+        lives_in: livesIn || undefined,
+        education: education || undefined,
+        workplace: workplace || undefined,
       });
       updateUser(updated);
       setSavedSuccess(true);
@@ -258,6 +270,65 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                   placeholder="+880 1..."
                   className="w-full bg-[#202c33] text-white rounded-xl px-3.5 py-2.5 border border-brand-border focus:outline-none focus:border-brand-emerald"
                 />
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="text-gray-300 font-medium block mb-1.5 flex items-center gap-1.5">
+                    <Cake className="w-3.5 h-3.5 text-pink-400" />
+                    <span>{lang === 'bn' ? 'জন্ম তারিখ (Date of Birth)' : 'Date of Birth'}</span>
+                  </label>
+                  <input
+                    type="date"
+                    value={dateOfBirth}
+                    onChange={(e) => setDateOfBirth(e.target.value)}
+                    className="w-full bg-[#202c33] text-white rounded-xl px-3.5 py-2.5 border border-brand-border focus:outline-none focus:border-brand-emerald"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-gray-300 font-medium block mb-1.5 flex items-center gap-1.5">
+                    <MapPin className="w-3.5 h-3.5 text-emerald-400" />
+                    <span>{lang === 'bn' ? 'কোথায় থাকেন (Lives in)' : 'Lives in'}</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={livesIn}
+                    onChange={(e) => setLivesIn(e.target.value)}
+                    placeholder={lang === 'bn' ? 'যেমন: ঢাকা, বাংলাদেশ' : 'e.g. Dhaka, Bangladesh'}
+                    className="w-full bg-[#202c33] text-white rounded-xl px-3.5 py-2.5 border border-brand-border focus:outline-none focus:border-brand-emerald"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="text-gray-300 font-medium block mb-1.5 flex items-center gap-1.5">
+                    <GraduationCap className="w-3.5 h-3.5 text-cyan-400" />
+                    <span>{lang === 'bn' ? 'কোথায় পড়েন (Education)' : 'Education / Studies at'}</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={education}
+                    onChange={(e) => setEducation(e.target.value)}
+                    placeholder={lang === 'bn' ? 'স্কুল/কলেজ/বিশ্ববিদ্যালয়...' : 'School, College or University...'}
+                    className="w-full bg-[#202c33] text-white rounded-xl px-3.5 py-2.5 border border-brand-border focus:outline-none focus:border-brand-emerald"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-gray-300 font-medium block mb-1.5 flex items-center gap-1.5">
+                    <Briefcase className="w-3.5 h-3.5 text-amber-400" />
+                    <span>{lang === 'bn' ? 'কোথায় চাকরি করেন (Workplace)' : 'Workplace / Job'}</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={workplace}
+                    onChange={(e) => setWorkplace(e.target.value)}
+                    placeholder={lang === 'bn' ? 'কোম্পানি বা পেশা...' : 'Company or Occupation...'}
+                    className="w-full bg-[#202c33] text-white rounded-xl px-3.5 py-2.5 border border-brand-border focus:outline-none focus:border-brand-emerald"
+                  />
+                </div>
               </div>
 
               <div className="pt-2 flex items-center justify-between">

@@ -10,7 +10,12 @@ export interface User {
   phone?: string;
   full_name: string;
   avatar_url?: string;
+  cover_url?: string;
   bio?: string;
+  date_of_birth?: string;
+  lives_in?: string;
+  education?: string;
+  workplace?: string;
   is_online: boolean;
   last_seen?: string;
   is_admin: boolean;

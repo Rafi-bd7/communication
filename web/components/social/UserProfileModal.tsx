@@ -26,7 +26,12 @@ import {
   Users,
   Save,
   User as UserIcon,
-  ShieldAlert
+  ShieldAlert,
+  MapPin,
+  GraduationCap,
+  Briefcase,
+  Cake,
+  Image as ImageIcon
 } from 'lucide-react';
 import { api } from '@/lib/api';
 import { useLanguage } from '@/lib/i18n';
@@ -64,10 +69,17 @@ export function UserProfileModal({
   const [editFullName, setEditFullName] = useState('');
   const [editBio, setEditBio] = useState('');
   const [editPhone, setEditPhone] = useState('');
+  const [editDateOfBirth, setEditDateOfBirth] = useState('');
+  const [editLivesIn, setEditLivesIn] = useState('');
+  const [editEducation, setEditEducation] = useState('');
+  const [editWorkplace, setEditWorkplace] = useState('');
   const [editAvatarUrl, setEditAvatarUrl] = useState('');
+  const [editCoverUrl, setEditCoverUrl] = useState('');
   const [isSaving, setIsSaving] = useState(false);
   const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
+  const [isUploadingCover, setIsUploadingCover] = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const coverInputRef = useRef<HTMLInputElement | null>(null);
 
   const isSelf = Boolean(currentUser?.id && profileUser?.id && currentUser.id === profileUser.id);
   const isFriends = friendshipStatus === 'friends';
@@ -88,7 +100,12 @@ export function UserProfileModal({
           setEditFullName(fullUser.full_name || '');
           setEditBio(fullUser.bio || '');
           setEditPhone(fullUser.phone || '');
+          setEditDateOfBirth(fullUser.date_of_birth || '');
+          setEditLivesIn(fullUser.lives_in || '');
+          setEditEducation(fullUser.education || '');
+          setEditWorkplace(fullUser.workplace || '');
           setEditAvatarUrl(fullUser.avatar_url || '');
+          setEditCoverUrl(fullUser.cover_url || '');
         }
       }
       if (statusRes) {
@@ -109,7 +126,12 @@ export function UserProfileModal({
       setEditFullName(initialUser.full_name || '');
       setEditBio(initialUser.bio || '');
       setEditPhone(initialUser.phone || '');
+      setEditDateOfBirth(initialUser.date_of_birth || '');
+      setEditLivesIn(initialUser.lives_in || '');
+      setEditEducation(initialUser.education || '');
+      setEditWorkplace(initialUser.workplace || '');
       setEditAvatarUrl(initialUser.avatar_url || '');
+      setEditCoverUrl(initialUser.cover_url || '');
       loadProfileData(initialUser.id);
     } else {
       setIsEditing(false);
@@ -205,6 +227,22 @@ export function UserProfileModal({
     }
   };
 
+  const handleCoverUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsUploadingCover(true);
+    try {
+      const res = await api.uploadFile(file);
+      const newUrl = res.file_url || res.url;
+      setEditCoverUrl(newUrl);
+    } catch (err) {
+      alert(lang === 'bn' ? 'কভার ছবি আপলোড ব্যর্থ হয়েছে' : 'Cover photo upload failed');
+    } finally {
+      setIsUploadingCover(false);
+    }
+  };
+
   const handleSaveProfile = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSaving(true);
@@ -213,7 +251,12 @@ export function UserProfileModal({
         full_name: editFullName.trim(),
         bio: editBio.trim(),
         phone: editPhone.trim(),
+        date_of_birth: editDateOfBirth.trim() || undefined,
+        lives_in: editLivesIn.trim() || undefined,
+        education: editEducation.trim() || undefined,
+        workplace: editWorkplace.trim() || undefined,
         avatar_url: editAvatarUrl || undefined,
+        cover_url: editCoverUrl || undefined,
       });
 
       setProfileUser(updated);
@@ -235,13 +278,22 @@ export function UserProfileModal({
         
         {/* Cover Banner (Facebook Style) */}
         <div className="relative">
-          <div className="h-32 sm:h-36 w-full bg-gradient-to-r from-emerald-800 via-teal-900 to-indigo-950 relative">
-            <div className="absolute inset-0 bg-black/25" />
+          <div className="h-32 sm:h-40 w-full relative overflow-hidden bg-gradient-to-r from-emerald-800 via-teal-900 to-indigo-950">
+            {(isEditing ? editCoverUrl : profileUser.cover_url) ? (
+              <img
+                src={isEditing ? editCoverUrl : profileUser.cover_url}
+                alt="Cover"
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <div className="absolute inset-0 bg-gradient-to-r from-emerald-800 via-teal-900 to-indigo-950" />
+            )}
+            <div className="absolute inset-0 bg-black/30" />
 
             {/* Privacy indicator badge on cover banner */}
             <div className="absolute top-3 left-4">
               {isSelf ? (
-                <span className="px-2.5 py-1 rounded-full bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 text-[10px] font-extrabold flex items-center gap-1 shadow">
+                <span className="px-2.5 py-1 rounded-full bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 text-[10px] font-extrabold flex items-center gap-1 shadow backdrop-blur-sm">
                   <ShieldCheck className="w-3 h-3" />
                   <span>{lang === 'bn' ? 'আমার প্রোফাইল' : 'My Profile'}</span>
                 </span>
@@ -257,6 +309,28 @@ export function UserProfileModal({
                 </span>
               )}
             </div>
+
+            {/* Change cover photo button in Edit Mode */}
+            {isEditing && (
+              <>
+                <input
+                  type="file"
+                  ref={coverInputRef}
+                  accept="image/*,.heic,.heif,.jpg,.jpeg,.png,.webp"
+                  onChange={handleCoverUpload}
+                  className="hidden"
+                />
+                <button
+                  type="button"
+                  onClick={() => coverInputRef.current?.click()}
+                  disabled={isUploadingCover}
+                  className="absolute bottom-3 right-4 px-3 py-1.5 rounded-xl bg-black/60 hover:bg-black/80 text-white text-xs font-bold flex items-center gap-1.5 backdrop-blur-md border border-white/20 shadow-lg transition-all"
+                >
+                  <Camera className="w-3.5 h-3.5" />
+                  <span>{isUploadingCover ? (lang === 'bn' ? 'আপলোড হচ্ছে...' : 'Uploading...') : (lang === 'bn' ? 'কভার ছবি পরিবর্তন' : 'Change Cover')}</span>
+                </button>
+              </>
+            )}
 
             <button
               onClick={onClose}
@@ -451,6 +525,65 @@ export function UserProfileModal({
                 placeholder="+8801700000000"
                 className="w-full bg-[#182229] border border-brand-border rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-brand-emerald"
               />
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label className="text-[11px] font-bold text-gray-300 block mb-1 flex items-center gap-1.5">
+                  <Cake className="w-3.5 h-3.5 text-pink-400" />
+                  <span>{lang === 'bn' ? 'জন্ম তারিখ (Date of Birth)' : 'Date of Birth'}</span>
+                </label>
+                <input
+                  type="date"
+                  value={editDateOfBirth}
+                  onChange={(e) => setEditDateOfBirth(e.target.value)}
+                  className="w-full bg-[#182229] border border-brand-border rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-brand-emerald"
+                />
+              </div>
+
+              <div>
+                <label className="text-[11px] font-bold text-gray-300 block mb-1 flex items-center gap-1.5">
+                  <MapPin className="w-3.5 h-3.5 text-emerald-400" />
+                  <span>{lang === 'bn' ? 'কোথায় থাকেন (Lives in)' : 'Lives in'}</span>
+                </label>
+                <input
+                  type="text"
+                  value={editLivesIn}
+                  onChange={(e) => setEditLivesIn(e.target.value)}
+                  placeholder={lang === 'bn' ? 'যেমন: ঢাকা, বাংলাদেশ' : 'e.g. Dhaka, Bangladesh'}
+                  className="w-full bg-[#182229] border border-brand-border rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-brand-emerald"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label className="text-[11px] font-bold text-gray-300 block mb-1 flex items-center gap-1.5">
+                  <GraduationCap className="w-3.5 h-3.5 text-cyan-400" />
+                  <span>{lang === 'bn' ? 'কোথায় পড়েন (Education)' : 'Education / Studies at'}</span>
+                </label>
+                <input
+                  type="text"
+                  value={editEducation}
+                  onChange={(e) => setEditEducation(e.target.value)}
+                  placeholder={lang === 'bn' ? 'স্কুল/কলেজ/বিশ্ববিদ্যালয়...' : 'School, College or University...'}
+                  className="w-full bg-[#182229] border border-brand-border rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-brand-emerald"
+                />
+              </div>
+
+              <div>
+                <label className="text-[11px] font-bold text-gray-300 block mb-1 flex items-center gap-1.5">
+                  <Briefcase className="w-3.5 h-3.5 text-amber-400" />
+                  <span>{lang === 'bn' ? 'কোথায় চাকরি করেন (Workplace)' : 'Workplace / Job'}</span>
+                </label>
+                <input
+                  type="text"
+                  value={editWorkplace}
+                  onChange={(e) => setEditWorkplace(e.target.value)}
+                  placeholder={lang === 'bn' ? 'কোম্পানি বা পেশা...' : 'Company or Occupation...'}
+                  className="w-full bg-[#182229] border border-brand-border rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-brand-emerald"
+                />
+              </div>
             </div>
 
             <div className="pt-2 flex items-center justify-end gap-2 border-t border-brand-border/60">
@@ -655,6 +788,78 @@ export function UserProfileModal({
                       {hasFullAccess ? (
                         <span className="font-bold text-white truncate block">
                           {profileUser.phone || (lang === 'bn' ? 'যুক্ত করা হয়নি' : 'Not added')}
+                        </span>
+                      ) : (
+                        <span className="text-amber-400 font-semibold flex items-center gap-1.5">
+                          <Lock className="w-3.5 h-3.5 text-amber-400" />
+                          <span>{lang === 'bn' ? '🔒 শুধু বন্ধুদের জন্য দৃশ্যমান' : '🔒 Visible only to friends'}</span>
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Date of Birth - Protected by Friendship Status */}
+                  <div className="p-3.5 rounded-2xl bg-[#1a232a] border border-brand-border/80 flex items-center gap-3">
+                    <Cake className="w-4 h-4 text-pink-400 flex-shrink-0" />
+                    <div className="min-w-0 flex-1">
+                      <span className="text-[10px] text-gray-400 block">{lang === 'bn' ? 'জন্ম তারিখ (Date of Birth)' : 'Date of Birth'}</span>
+                      {hasFullAccess ? (
+                        <span className="font-bold text-white truncate block">
+                          {profileUser.date_of_birth || (lang === 'bn' ? 'যুক্ত করা হয়নি' : 'Not added')}
+                        </span>
+                      ) : (
+                        <span className="text-amber-400 font-semibold flex items-center gap-1.5">
+                          <Lock className="w-3.5 h-3.5 text-amber-400" />
+                          <span>{lang === 'bn' ? '🔒 শুধু বন্ধুদের জন্য দৃশ্যমান' : '🔒 Visible only to friends'}</span>
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Lives in / Current Location - Protected by Friendship Status */}
+                  <div className="p-3.5 rounded-2xl bg-[#1a232a] border border-brand-border/80 flex items-center gap-3">
+                    <MapPin className="w-4 h-4 text-emerald-400 flex-shrink-0" />
+                    <div className="min-w-0 flex-1">
+                      <span className="text-[10px] text-gray-400 block">{lang === 'bn' ? 'বর্তমান ঠিকানা (Lives in)' : 'Lives in'}</span>
+                      {hasFullAccess ? (
+                        <span className="font-bold text-white truncate block">
+                          {profileUser.lives_in || (lang === 'bn' ? 'যুক্ত করা হয়নি' : 'Not added')}
+                        </span>
+                      ) : (
+                        <span className="text-amber-400 font-semibold flex items-center gap-1.5">
+                          <Lock className="w-3.5 h-3.5 text-amber-400" />
+                          <span>{lang === 'bn' ? '🔒 শুধু বন্ধুদের জন্য দৃশ্যমান' : '🔒 Visible only to friends'}</span>
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Education / Studies at - Protected by Friendship Status */}
+                  <div className="p-3.5 rounded-2xl bg-[#1a232a] border border-brand-border/80 flex items-center gap-3">
+                    <GraduationCap className="w-4 h-4 text-cyan-400 flex-shrink-0" />
+                    <div className="min-w-0 flex-1">
+                      <span className="text-[10px] text-gray-400 block">{lang === 'bn' ? 'পড়াশোনা (Studies at)' : 'Education / Studies at'}</span>
+                      {hasFullAccess ? (
+                        <span className="font-bold text-white truncate block">
+                          {profileUser.education || (lang === 'bn' ? 'যুক্ত করা হয়নি' : 'Not added')}
+                        </span>
+                      ) : (
+                        <span className="text-amber-400 font-semibold flex items-center gap-1.5">
+                          <Lock className="w-3.5 h-3.5 text-amber-400" />
+                          <span>{lang === 'bn' ? '🔒 শুধু বন্ধুদের জন্য দৃশ্যমান' : '🔒 Visible only to friends'}</span>
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Workplace / Job - Protected by Friendship Status */}
+                  <div className="p-3.5 rounded-2xl bg-[#1a232a] border border-brand-border/80 flex items-center gap-3">
+                    <Briefcase className="w-4 h-4 text-amber-400 flex-shrink-0" />
+                    <div className="min-w-0 flex-1">
+                      <span className="text-[10px] text-gray-400 block">{lang === 'bn' ? 'কর্মস্থল / চাকরি (Works at)' : 'Workplace / Job'}</span>
+                      {hasFullAccess ? (
+                        <span className="font-bold text-white truncate block">
+                          {profileUser.workplace || (lang === 'bn' ? 'যুক্ত করা হয়নি' : 'Not added')}
                         </span>
                       ) : (
                         <span className="text-amber-400 font-semibold flex items-center gap-1.5">
