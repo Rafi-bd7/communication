@@ -108,17 +108,20 @@ export function DiscoverPeopleModal({
   };
 
   const handleCancelRequest = async (targetUserId: string) => {
+    // Immediate optimistic update so button switches to Add Friend instantly
+    setSuggestions((prev) =>
+      prev.map((s) =>
+        s.user.id === targetUserId || s.friendship_id === targetUserId
+          ? { ...s, friendship_status: 'none', friendship_id: null }
+          : s
+      )
+    );
     try {
       await api.cancelFriendRequest(targetUserId);
-      setSuggestions((prev) =>
-        prev.map((s) =>
-          s.user.id === targetUserId
-            ? { ...s, friendship_status: 'none', friendship_id: null }
-            : s
-        )
-      );
     } catch (err) {
-      alert('Could not cancel request');
+      console.error('Cancel request error:', err);
+      // Quietly reload data to keep state in sync
+      await loadData();
     }
   };
 

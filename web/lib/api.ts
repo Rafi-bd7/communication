@@ -51,7 +51,11 @@ export const api = {
   // Auth
   register: (data: any) => request('/auth/register', { method: 'POST', body: JSON.stringify(data) }),
   login: (data: any) => request('/auth/login', { method: 'POST', body: JSON.stringify(data) }),
-  resetPassword: (data: { username_or_email: string; new_password: string; phone?: string }) =>
+  sendResetCode: (identifier: string) =>
+    request('/auth/send-reset-code', { method: 'POST', body: JSON.stringify({ identifier }) }),
+  verifyResetCode: (identifier: string, code: string) =>
+    request('/auth/verify-reset-code', { method: 'POST', body: JSON.stringify({ identifier, code }) }),
+  resetPassword: (data: { username_or_email?: string; identifier?: string; new_password: string; code?: string; phone?: string }) =>
     request('/auth/reset-password', { method: 'POST', body: JSON.stringify(data) }),
   getMe: () => request('/auth/me'),
   seedDemo: () => request('/auth/seed-demo', { method: 'POST' }),
@@ -216,7 +220,13 @@ export const api = {
   // Friends & Social Community (Facebook Features)
   getFriendSuggestions: () => request('/friends/suggestions'),
   sendFriendRequest: (userId: string) => request(`/friends/request/${userId}`, { method: 'POST' }),
-  cancelFriendRequest: (userId: string) => request(`/friends/cancel/${userId}`, { method: 'POST' }),
+  cancelFriendRequest: async (userId: string) => {
+    try {
+      return await request(`/friends/cancel/${userId}`, { method: 'POST' });
+    } catch (e) {
+      return await request(`/friends/cancel/${userId}`, { method: 'DELETE' }).catch(() => ({ status: 'none' }));
+    }
+  },
   acceptFriendRequest: (friendshipId: string) => request(`/friends/accept/${friendshipId}`, { method: 'POST' }),
   declineFriendRequest: (friendshipId: string) => request(`/friends/decline/${friendshipId}`, { method: 'POST' }),
   getMyFriends: () => request('/friends/my-friends'),

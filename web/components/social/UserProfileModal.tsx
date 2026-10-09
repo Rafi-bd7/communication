@@ -134,13 +134,14 @@ export function UserProfileModal({
 
   const handleCancelFriendRequest = async () => {
     setActionLoading(true);
+    setFriendshipStatus('none');
+    setFriendshipId(null);
     try {
       await api.cancelFriendRequest(profileUser.id);
-      setFriendshipStatus('none');
-      setFriendshipId(null);
       await loadProfileData(profileUser.id);
     } catch (err) {
-      alert(lang === 'bn' ? 'অনুরোধ বাতিল করা যায়নি' : 'Could not cancel request');
+      console.error('Cancel friend request error:', err);
+      await loadProfileData(profileUser.id);
     } finally {
       setActionLoading(false);
     }

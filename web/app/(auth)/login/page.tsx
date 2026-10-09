@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Lock, User as UserIcon, Languages, KeyRound, X, CheckCircle, Phone } from 'lucide-react';
+import { Lock, User as UserIcon, Languages, KeyRound, X, CheckCircle, Phone, Mail, ShieldCheck, ArrowLeft, Eye, EyeOff, RefreshCw } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useLanguage } from '@/lib/i18n';
 import { api } from '@/lib/api';
@@ -17,14 +17,18 @@ export default function LoginPage() {
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
-  // Forgot / Reset Password Modal State
+  // Forgot / Reset Password Modal State (OTP Flow)
   const [showForgotModal, setShowForgotModal] = useState(false);
+  const [resetStep, setResetStep] = useState<1 | 2>(1);
   const [resetIdentifier, setResetIdentifier] = useState('');
-  const [resetPhone, setResetPhone] = useState('');
+  const [otpCode, setOtpCode] = useState('');
+  const [sentOtpInfo, setSentOtpInfo] = useState<{ destination: string; channel: string; code?: string } | null>(null);
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [showNewPassword, setShowNewPassword] = useState(false);
   const [resetError, setResetError] = useState('');
   const [resetSuccess, setResetSuccess] = useState('');
+  const [isSendingCode, setIsSendingCode] = useState(false);
   const [isResetting, setIsResetting] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -42,13 +46,54 @@ export default function LoginPage() {
     }
   };
 
+  const handleOpenForgotModal = () => {
+    setResetStep(1);
+    setResetIdentifier(usernameOrEmail || '');
+    setOtpCode('');
+    setSentOtpInfo(null);
+    setNewPassword('');
+    setConfirmPassword('');
+    setResetError('');
+    setResetSuccess('');
+    setShowForgotModal(true);
+  };
+
+  const handleSendCode = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    if (!resetIdentifier.trim()) {
+      setResetError(lang === 'bn' ? 'ইউজারনেম, ইমেইল বা ফোন নম্বর লিখুন' : 'Please enter your username, email, or phone number');
+      return;
+    }
+
+    setResetError('');
+    setIsSendingCode(true);
+
+    try {
+      const res = await api.sendResetCode(resetIdentifier.trim());
+      setSentOtpInfo(res);
+      if (res.code) {
+        setOtpCode(res.code);
+      }
+      setResetStep(2);
+    } catch (err: any) {
+      setResetError(err.message || (lang === 'bn' ? 'কোড পাঠানো যায়নি।' : 'Could not send verification code.'));
+    } finally {
+      setIsSendingCode(false);
+    }
+  };
+
   const handleResetPassword = async (e: React.FormEvent) => {
     e.preventDefault();
     setResetError('');
     setResetSuccess('');
 
+    if (!otpCode || otpCode.trim().length !== 6) {
+      setResetError(lang === 'bn' ? 'সঠিক ৬ সংখ্যার ভেরিফিকেশন কোড দিন।' : 'Please enter the 6-digit verification code.');
+      return;
+    }
+
     if (newPassword.length < 6) {
-      setResetError(lang === 'bn' ? 'পাসওয়ার্ড কমপক্ষে ৬ অক্ষরের হতে হবে।' : 'New password must be at least 6 characters.');
+      setResetError(lang === 'bn' ? 'নতুন পাসওয়ার্ড কমপক্ষে ৬ অক্ষরের হতে হবে।' : 'New password must be at least 6 characters.');
       return;
     }
 
@@ -60,22 +105,22 @@ export default function LoginPage() {
     setIsResetting(true);
     try {
       await api.resetPassword({
-        username_or_email: resetIdentifier,
+        identifier: resetIdentifier.trim(),
+        code: otpCode.trim(),
         new_password: newPassword,
-        phone: resetPhone || undefined,
       });
 
       setResetSuccess(
         lang === 'bn' 
-          ? 'পাসওয়ার্ড সফলভাবে পরিবর্তন করা হয়েছে! এখন নতুন পাসওয়ার্ড দিয়ে লগইন করুন।' 
-          : 'Password reset successfully! You can now log in with your new password.'
+          ? 'পাসওয়ার্ড সফলভাবে পরিবর্তন করা হয়েছে! এখন লগইন করুন।' 
+          : 'Password reset successfully! You can now log in.'
       );
-      setUsernameOrEmail(resetIdentifier);
+      setUsernameOrEmail(resetIdentifier.trim());
       setPassword('');
       setTimeout(() => {
         setShowForgotModal(false);
         setResetSuccess('');
-      }, 2500);
+      }, 2000);
     } catch (err: any) {
       setResetError(err.message || (lang === 'bn' ? 'পাসওয়ার্ড রিসেট ব্যর্থ হয়েছে।' : 'Password reset failed.'));
     } finally {
@@ -187,47 +232,63 @@ export default function LoginPage() {
         </p>
       </div>
 
-      {/* Forgot / Reset Password Modal */}
+      {/* Forgot / Reset Password Modal (2-Step OTP Verification) */}
       {showForgotModal && (
         <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="bg-[#111b21] border border-brand-border rounded-3xl w-full max-w-md p-6 shadow-2xl text-white animate-fade-in relative">
-            <div className="flex items-center justify-between pb-3 border-b border-[#2a3942] mb-4">
-              <div className="flex items-center gap-2">
-                <KeyRound className="w-5 h-5 text-brand-emerald" />
-                <h3 className="font-bold text-base">
-                  {lang === 'bn' ? 'পাসওয়ার্ড রিসেট করুন' : 'Reset Password'}
-                </h3>
+            {/* Modal Header */}
+            <div className="flex items-center justify-between pb-3.5 border-b border-[#2a3942] mb-4">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-xl bg-brand-emerald/15 flex items-center justify-center text-brand-emerald">
+                  <KeyRound className="w-4 h-4" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-sm text-white">
+                    {lang === 'bn' ? 'পাসওয়ার্ড রিসেট ও ভেরিফিকেশন' : 'Password Reset & Verification'}
+                  </h3>
+                  <p className="text-[10px] text-gray-400">
+                    {resetStep === 1 
+                      ? (lang === 'bn' ? 'ধাপ ১: কোড পাঠান' : 'Step 1: Request Code')
+                      : (lang === 'bn' ? 'ধাপ ২: ভেরিফিকেশন কোড ও নতুন পাসওয়ার্ড' : 'Step 2: Enter Code & New Password')}
+                  </p>
+                </div>
               </div>
               <button
                 onClick={() => setShowForgotModal(false)}
-                className="p-1 rounded-xl text-gray-400 hover:text-white hover:bg-white/10"
+                className="p-1.5 rounded-xl text-gray-400 hover:text-white hover:bg-white/10 transition-colors"
               >
-                <X className="w-5 h-5" />
+                <X className="w-4 h-4" />
               </button>
             </div>
 
             {resetSuccess ? (
-              <div className="py-6 flex flex-col items-center text-center gap-3">
-                <CheckCircle className="w-12 h-12 text-brand-emerald animate-bounce" />
-                <p className="text-sm font-semibold text-emerald-400">{resetSuccess}</p>
+              <div className="py-8 flex flex-col items-center text-center gap-3 animate-fade-in">
+                <div className="w-14 h-14 rounded-full bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-brand-emerald shadow-lg shadow-emerald-500/10">
+                  <CheckCircle className="w-8 h-8 text-brand-emerald" />
+                </div>
+                <h4 className="text-sm font-bold text-white">
+                  {lang === 'bn' ? 'পাসওয়ার্ড সফলভাবে পরিবর্তিত হয়েছে!' : 'Password Reset Successfully!'}
+                </h4>
+                <p className="text-xs text-gray-300 max-w-xs">{resetSuccess}</p>
               </div>
-            ) : (
-              <form onSubmit={handleResetPassword} className="flex flex-col gap-3.5 text-xs">
+            ) : resetStep === 1 ? (
+              /* STEP 1: Enter Identifier & Send Verification Code */
+              <form onSubmit={handleSendCode} className="flex flex-col gap-4 text-xs">
                 <p className="text-gray-400 leading-relaxed text-[11px]">
                   {lang === 'bn' 
-                    ? 'আপনার অ্যাকাউন্টের ইউজারনেম বা ইমেইল এবং নতুন পাসওয়ার্ড লিখে রিসেট করুন।' 
-                    : 'Enter your registered username or email, and set your new password.'}
+                    ? 'আপনার অ্যাকাউন্টের ইউজারনেম, ইমেইল বা ফোন নম্বর দিন। আপনার অ্যাকাউন্টে একটি ৬ সংখ্যার ভেরিফিকেশন কোড পাঠানো হবে।' 
+                    : 'Enter your registered username, email, or phone. A 6-digit verification code will be sent to your account.'}
                 </p>
 
                 {resetError && (
-                  <div className="p-2.5 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 font-medium text-center">
+                  <div className="p-2.5 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 font-medium text-center text-xs">
                     {resetError}
                   </div>
                 )}
 
                 <div>
-                  <label className="text-gray-300 font-semibold block mb-1">
-                    {lang === 'bn' ? 'ইউজারনেম বা ইমেইল *' : 'Username or Email *'}
+                  <label className="text-gray-300 font-semibold block mb-1.5 text-xs">
+                    {lang === 'bn' ? 'ইউজারনেম, ইমেইল বা ফোন নম্বর *' : 'Username, Email, or Phone *'}
                   </label>
                   <div className="relative">
                     <UserIcon className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
@@ -236,47 +297,135 @@ export default function LoginPage() {
                       value={resetIdentifier}
                       onChange={(e) => setResetIdentifier(e.target.value)}
                       required
-                      placeholder={lang === 'bn' ? 'যেমন: user123 বা user@mail.com' : 'e.g. user123 or user@mail.com'}
-                      className="w-full bg-[#202c33] text-white text-xs rounded-xl pl-9 pr-3 py-2.5 border border-brand-border focus:outline-none focus:border-brand-emerald"
+                      placeholder={lang === 'bn' ? 'যেমন: user123, user@mail.com বা 017...' : 'e.g. user123, user@mail.com or +8801...'}
+                      className="w-full bg-[#202c33] text-white text-xs rounded-xl pl-9 pr-3 py-2.5 border border-brand-border focus:outline-none focus:border-brand-emerald transition-colors"
                     />
                   </div>
                 </div>
 
+                <div className="mt-2 flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setShowForgotModal(false)}
+                    className="flex-1 py-2.5 rounded-xl border border-brand-border bg-[#202c33] hover:bg-[#2a3942] text-gray-300 font-bold transition-all"
+                  >
+                    {lang === 'bn' ? 'বাতিল' : 'Cancel'}
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={isSendingCode}
+                    className="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-brand-emerald to-emerald-400 hover:brightness-110 text-brand-dark font-bold shadow-md shadow-brand-emerald/20 transition-all active:scale-95 disabled:opacity-50 flex items-center justify-center gap-1.5"
+                  >
+                    {isSendingCode ? (
+                      <>
+                        <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                        <span>{lang === 'bn' ? 'পাঠানো হচ্ছে...' : 'Sending...'}</span>
+                      </>
+                    ) : (
+                      <>
+                        <ShieldCheck className="w-4 h-4" />
+                        <span>{lang === 'bn' ? 'ভেরিফিকেশন কোড পাঠান' : 'Send Code'}</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+              </form>
+            ) : (
+              /* STEP 2: Enter 6-digit OTP & Set New Password */
+              <form onSubmit={handleResetPassword} className="flex flex-col gap-3.5 text-xs animate-fade-in">
+                {/* Sent Confirmation Badge */}
+                {sentOtpInfo && (
+                  <div className="p-3 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 flex items-start gap-2.5">
+                    <div className="mt-0.5 w-6 h-6 rounded-lg bg-emerald-500/20 text-brand-emerald flex items-center justify-center flex-shrink-0">
+                      {sentOtpInfo.channel === 'phone' ? <Phone className="w-3.5 h-3.5" /> : <Mail className="w-3.5 h-3.5" />}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-[11px] text-gray-300">
+                        {lang === 'bn' ? 'কোড পাঠানো হয়েছে:' : 'Verification code sent to:'}{' '}
+                        <span className="font-bold text-white">{sentOtpInfo.destination}</span>
+                      </p>
+                      {sentOtpInfo.code && (
+                        <div className="mt-1.5 flex items-center gap-2">
+                          <span className="px-2 py-0.5 rounded-md bg-emerald-500/20 border border-emerald-500/40 text-brand-emerald font-mono font-bold tracking-widest text-xs">
+                            {sentOtpInfo.code}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => setOtpCode(sentOtpInfo.code || '')}
+                            className="text-[10px] text-brand-emerald hover:underline font-semibold"
+                          >
+                            {lang === 'bn' ? 'কোড বসান' : 'Apply Code'}
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {resetError && (
+                  <div className="p-2.5 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 font-medium text-center text-xs">
+                    {resetError}
+                  </div>
+                )}
+
+                {/* 6-Digit Code Input */}
                 <div>
-                  <label className="text-gray-300 font-semibold block mb-1">
-                    {lang === 'bn' ? 'ফোন নম্বর (ঐচ্ছিক)' : 'Phone Number (Optional)'}
-                  </label>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="text-gray-300 font-semibold text-xs">
+                      {lang === 'bn' ? '৬ ডিজিটের ভেরিফিকেশন কোড *' : '6-Digit Verification Code *'}
+                    </label>
+                    <button
+                      type="button"
+                      disabled={isSendingCode}
+                      onClick={() => handleSendCode()}
+                      className="text-[10px] text-brand-emerald hover:underline font-semibold flex items-center gap-1"
+                    >
+                      <RefreshCw className={`w-2.5 h-2.5 ${isSendingCode ? 'animate-spin' : ''}`} />
+                      <span>{lang === 'bn' ? 'কোড আবার পাঠান' : 'Resend Code'}</span>
+                    </button>
+                  </div>
                   <div className="relative">
-                    <Phone className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                    <ShieldCheck className="w-4 h-4 text-brand-emerald absolute left-3 top-1/2 -translate-y-1/2" />
                     <input
                       type="text"
-                      value={resetPhone}
-                      onChange={(e) => setResetPhone(e.target.value)}
-                      placeholder="+8801..."
-                      className="w-full bg-[#202c33] text-white text-xs rounded-xl pl-9 pr-3 py-2.5 border border-brand-border focus:outline-none focus:border-brand-emerald"
+                      maxLength={6}
+                      value={otpCode}
+                      onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, ''))}
+                      required
+                      placeholder="123456"
+                      className="w-full bg-[#202c33] text-white text-sm font-mono tracking-widest text-center rounded-xl py-2.5 border border-brand-border focus:outline-none focus:border-brand-emerald transition-colors"
                     />
                   </div>
                 </div>
 
+                {/* New Password */}
                 <div>
-                  <label className="text-gray-300 font-semibold block mb-1">
+                  <label className="text-gray-300 font-semibold block mb-1 text-xs">
                     {lang === 'bn' ? 'নতুন পাসওয়ার্ড (কমপক্ষে ৬ অক্ষর) *' : 'New Password (min 6 chars) *'}
                   </label>
                   <div className="relative">
                     <Lock className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
                     <input
-                      type="password"
+                      type={showNewPassword ? 'text' : 'password'}
                       value={newPassword}
                       onChange={(e) => setNewPassword(e.target.value)}
                       required
                       placeholder="••••••••"
-                      className="w-full bg-[#202c33] text-white text-xs rounded-xl pl-9 pr-3 py-2.5 border border-brand-border focus:outline-none focus:border-brand-emerald"
+                      className="w-full bg-[#202c33] text-white text-xs rounded-xl pl-9 pr-9 py-2.5 border border-brand-border focus:outline-none focus:border-brand-emerald transition-colors"
                     />
+                    <button
+                      type="button"
+                      onClick={() => setShowNewPassword(!showNewPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white"
+                    >
+                      {showNewPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                    </button>
                   </div>
                 </div>
 
+                {/* Confirm New Password */}
                 <div>
-                  <label className="text-gray-300 font-semibold block mb-1">
+                  <label className="text-gray-300 font-semibold block mb-1 text-xs">
                     {lang === 'bn' ? 'নতুন পাসওয়ার্ড নিশ্চিত করুন *' : 'Confirm New Password *'}
                   </label>
                   <div className="relative">
@@ -287,7 +436,7 @@ export default function LoginPage() {
                       onChange={(e) => setConfirmPassword(e.target.value)}
                       required
                       placeholder="••••••••"
-                      className="w-full bg-[#202c33] text-white text-xs rounded-xl pl-9 pr-3 py-2.5 border border-brand-border focus:outline-none focus:border-brand-emerald"
+                      className="w-full bg-[#202c33] text-white text-xs rounded-xl pl-9 pr-3 py-2.5 border border-brand-border focus:outline-none focus:border-brand-emerald transition-colors"
                     />
                   </div>
                 </div>
@@ -295,17 +444,24 @@ export default function LoginPage() {
                 <div className="mt-2 flex gap-2">
                   <button
                     type="button"
-                    onClick={() => setShowForgotModal(false)}
-                    className="flex-1 py-2.5 rounded-xl border border-brand-border bg-[#202c33] hover:bg-[#2a3942] text-gray-300 font-bold"
+                    onClick={() => {
+                      setResetStep(1);
+                      setResetError('');
+                    }}
+                    className="px-3 py-2.5 rounded-xl border border-brand-border bg-[#202c33] hover:bg-[#2a3942] text-gray-300 font-bold transition-all flex items-center justify-center gap-1"
+                    title={lang === 'bn' ? 'পেছনে যান' : 'Back'}
                   >
-                    {lang === 'bn' ? 'বাতিল' : 'Cancel'}
+                    <ArrowLeft className="w-3.5 h-3.5" />
+                    <span className="hidden sm:inline">{lang === 'bn' ? 'পেছনে' : 'Back'}</span>
                   </button>
                   <button
                     type="submit"
                     disabled={isResetting}
-                    className="flex-1 py-2.5 rounded-xl bg-brand-emerald hover:brightness-110 text-brand-dark font-bold shadow-md shadow-brand-emerald/20 transition-all active:scale-95 disabled:opacity-50"
+                    className="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-brand-emerald to-emerald-400 hover:brightness-110 text-brand-dark font-bold shadow-md shadow-brand-emerald/20 transition-all active:scale-95 disabled:opacity-50"
                   >
-                    {isResetting ? (lang === 'bn' ? 'রিসেট হচ্ছে...' : 'Resetting...') : (lang === 'bn' ? 'পাসওয়ার্ড রিসেট করুন' : 'Confirm Reset')}
+                    {isResetting 
+                      ? (lang === 'bn' ? 'রিসেট হচ্ছে...' : 'Resetting...') 
+                      : (lang === 'bn' ? 'পাসওয়ার্ড পরিবর্তন করুন' : 'Confirm & Reset Password')}
                   </button>
                 </div>
               </form>

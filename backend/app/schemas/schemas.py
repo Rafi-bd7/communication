@@ -16,9 +16,18 @@ class UserLogin(BaseModel):
     username_or_email: str
     password: str
 
+class SendResetCodeRequest(BaseModel):
+    identifier: str
+
+class VerifyResetCodeRequest(BaseModel):
+    identifier: str
+    code: str
+
 class PasswordResetRequest(BaseModel):
-    username_or_email: str
+    username_or_email: Optional[str] = None
+    identifier: Optional[str] = None
     new_password: str
+    code: Optional[str] = None
     phone: Optional[str] = None
 
 class UserUpdate(BaseModel):

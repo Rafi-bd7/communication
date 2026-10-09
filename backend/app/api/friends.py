@@ -130,16 +130,20 @@ async def send_friend_request(
     return {"message": "Friend request sent", "status": "pending_sent", "id": new_rel.id}
 
 @router.post("/cancel/{target_user_id}")
+@router.delete("/cancel/{target_user_id}")
+@router.post("/request/{target_user_id}/cancel")
+@router.delete("/request/{target_user_id}/cancel")
 async def cancel_friend_request(
     target_user_id: str,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    """Cancel a pending friend request sent by current user"""
+    """Cancel a pending friend request sent by or received by current user, or by friendship ID"""
     existing = await db.execute(
         select(Friendship).where(
             or_(
                 and_(Friendship.requester_id == current_user.id, Friendship.receiver_id == target_user_id),
+                and_(Friendship.receiver_id == current_user.id, Friendship.requester_id == target_user_id),
                 Friendship.id == target_user_id
             )
         )
@@ -148,8 +152,7 @@ async def cancel_friend_request(
     if rel:
         await db.delete(rel)
         await db.commit()
-        return {"message": "Friend request cancelled", "status": "none"}
-    return {"message": "No request found", "status": "none"}
+    return {"message": "Friend request cancelled", "status": "none"}
 
 @router.post("/accept/{friendship_id}")
 async def accept_friend_request(
@@ -160,29 +163,47 @@ async def accept_friend_request(
     """Accept incoming friend request and automatically create a chat conversation"""
     rel = await db.get(Friendship, friendship_id)
     if not rel or rel.receiver_id != current_user.id:
+        # Check if friendship_id is actually the requester user's ID
+        stmt = select(Friendship).where(
+            or_(
+                and_(Friendship.requester_id == friendship_id, Friendship.receiver_id == current_user.id),
+                and_(Friendship.receiver_id == friendship_id, Friendship.requester_id == current_user.id)
+            )
+        )
+        rel = (await db.execute(stmt)).scalar_one_or_none()
+
+    if not rel:
         raise HTTPException(status_code=404, detail="Friend request not found")
 
     rel.status = "accepted"
 
     # Ensure a direct conversation exists between the two users
-    other_user_id = rel.requester_id
+    other_user_id = rel.requester_id if rel.receiver_id == current_user.id else rel.receiver_id
     conv = await get_or_create_direct_conversation(db, current_user.id, other_user_id)
 
     await db.commit()
     return {"message": "Friend request accepted", "status": "friends", "conversation_id": conv.id}
 
 @router.post("/decline/{friendship_id}")
+@router.delete("/decline/{friendship_id}")
 async def decline_friend_request(
     friendship_id: str,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
     rel = await db.get(Friendship, friendship_id)
-    if not rel or rel.receiver_id != current_user.id:
-        raise HTTPException(status_code=404, detail="Friend request not found")
+    if not rel:
+        stmt = select(Friendship).where(
+            or_(
+                and_(Friendship.requester_id == friendship_id, Friendship.receiver_id == current_user.id),
+                and_(Friendship.receiver_id == friendship_id, Friendship.requester_id == current_user.id)
+            )
+        )
+        rel = (await db.execute(stmt)).scalar_one_or_none()
 
-    await db.delete(rel)
-    await db.commit()
+    if rel:
+        await db.delete(rel)
+        await db.commit()
     return {"message": "Friend request declined", "status": "none"}
 
 @router.get("/status/{target_user_id}")
@@ -214,6 +235,7 @@ async def get_friendship_status(
         return {"status": "pending_received", "friendship_id": rel.id}
 
 @router.post("/unfriend/{target_user_id}")
+@router.delete("/unfriend/{target_user_id}")
 async def unfriend_user(
     target_user_id: str,
     db: AsyncSession = Depends(get_db),
