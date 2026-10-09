@@ -17,27 +17,6 @@ services:
         value: 3.11.0
     healthCheckPath: /
 
-  # ── Frontend (Next.js) ────────────────────────────────────────────────────
-  - type: web
-    name: adda-frontend
-    runtime: node
-    rootDir: web
-    buildCommand: npm install && npm run build
-    startCommand: npm start
-    envVars:
-      - key: NODE_VERSION
-        value: 20.11.0
-      - key: BACKEND_URL
-        fromService:
-          name: adda-backend
-          type: web
-          envVarKey: RENDER_EXTERNAL_URL
-      - key: NEXT_PUBLIC_BACKEND_URL
-        fromService:
-          name: adda-backend
-          type: web
-          envVarKey: RENDER_EXTERNAL_URL
-
 # ── PostgreSQL Database ────────────────────────────────────────────────────
 databases:
   - name: adda-db
