@@ -1,25 +1,15 @@
 services:
-  # ── Backend (FastAPI) ──────────────────────────────────────────────────────
+  # ── Backend (FastAPI - 100% Free Plan) ────────────────────────────────────
   - type: web
     name: adda-backend
+    plan: free
     runtime: python
     rootDir: backend
     buildCommand: pip install -r requirements.txt
     startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
     envVars:
-      - key: DATABASE_URL
-        fromDatabase:
-          name: adda-db
-          property: connectionString
       - key: SECRET_KEY
         generateValue: true
       - key: PYTHON_VERSION
         value: 3.11.0
     healthCheckPath: /
-
-# ── PostgreSQL Database ────────────────────────────────────────────────────
-databases:
-  - name: adda-db
-    databaseName: adda
-    user: adda_user
-    plan: free
