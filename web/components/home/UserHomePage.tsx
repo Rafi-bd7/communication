@@ -95,9 +95,8 @@ export function UserHomePage({
 
   const loadActiveUsers = async () => {
     try {
-      const users = await api.listUsers();
-      // Filter out self and show users
-      setOnlineUsers((users || []).filter((u: any) => u.id !== user?.id));
+      const friends = await api.getMyFriends();
+      setOnlineUsers(friends || []);
     } catch (err) {}
   };
 
@@ -521,7 +520,7 @@ export function UserHomePage({
             <div className="flex items-center justify-between">
               <h3 className="font-extrabold text-sm text-white flex items-center gap-2">
                 <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping" />
-                <span>{lang === 'bn' ? 'সক্রিয় বন্ধুরা (Online Now)' : 'Active Contacts'}</span>
+                <span>{lang === 'bn' ? 'আমার বন্ধুরা (Friends)' : 'Active Friends'}</span>
               </h3>
               <span className="text-[11px] font-bold text-brand-emerald bg-brand-emerald/10 px-2 py-0.5 rounded-full">
                 {onlineUsers.length}
@@ -530,9 +529,17 @@ export function UserHomePage({
 
             <div className="flex flex-col gap-2.5 max-h-96 overflow-y-auto">
               {onlineUsers.length === 0 ? (
-                <p className="text-xs text-gray-400 text-center py-4">
-                  {lang === 'bn' ? 'অন্য কোনো বন্ধু নেই' : 'No contacts online'}
-                </p>
+                <div className="py-6 text-center flex flex-col items-center gap-2">
+                  <p className="text-xs text-gray-400">
+                    {lang === 'bn' ? 'কোনো ফ্রেন্ড এখনও যুক্ত হয়নি।' : 'No friends connected yet.'}
+                  </p>
+                  <button
+                    onClick={onOpenDiscoverPeople}
+                    className="px-3 py-1.5 rounded-xl bg-brand-emerald text-brand-dark font-bold text-[11px] shadow hover:brightness-110 transition-all active:scale-95"
+                  >
+                    {lang === 'bn' ? 'নতুন বন্ধু খুঁজুন' : 'Find Friends'}
+                  </button>
+                </div>
               ) : (
                 onlineUsers.map((contact) => (
                   <div

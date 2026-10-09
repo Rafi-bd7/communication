@@ -167,6 +167,9 @@ export default function ChatPage() {
     } else if (user) {
       loadConversations();
       loadStatuses();
+      if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'default') {
+        Notification.requestPermission().catch(() => {});
+      }
     }
   }, [user, authLoading, router, loadConversations, loadStatuses]);
 
@@ -214,9 +217,25 @@ export default function ChatPage() {
   // 4. WebSocket Event Handlers
   const handleIncomingMessage = useCallback((msg: MessageItem) => {
     if (activeConversation && msg.conversation_id === activeConversation.id) {
-      setMessages((prev) => [...prev, msg]);
-      soundFX.playMessageReceived();
+      setMessages((prev) => {
+        if (prev.some((m) => m.id === msg.id)) return prev;
+        return [...prev, msg];
+      });
     }
+
+    // Trigger Native Notification for incoming message from other user
+    if (msg.sender_id !== user?.id) {
+      if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
+        try {
+          new Notification(msg.sender?.full_name || 'Adda বার্তা', {
+            body: msg.content || (msg.file_url ? '📷 ফাইল/ছবি পাঠিয়েছেন' : 'নতুন বার্তা এসেছে'),
+            icon: msg.sender?.avatar_url || '/icons/icon-192.png',
+            tag: `msg-${msg.conversation_id}`,
+          });
+        } catch (e) {}
+      }
+    }
+
     setConversations((prev) =>
       prev.map((c) => {
         if (c.id === msg.conversation_id) {
@@ -236,7 +255,7 @@ export default function ChatPage() {
         return c;
       })
     );
-  }, [activeConversation]);
+  }, [activeConversation, user]);
 
   const handleMessageUpdated = useCallback((msg: MessageItem) => {
     setMessages((prev) => prev.map((m) => (m.id === msg.id ? msg : m)));
@@ -381,7 +400,7 @@ export default function ChatPage() {
         reply_to_id: payload.reply_to_id,
       });
 
-      setMessages((prev) => [...prev, res]);
+      setMessages((prev) => (prev.some((m) => m.id === res.id) ? prev : [...prev, res]));
       soundFX.playMessageSent();
 
       setConversations((prev) =>

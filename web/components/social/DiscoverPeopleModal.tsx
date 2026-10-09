@@ -101,8 +101,24 @@ export function DiscoverPeopleModal({
     try {
       await api.declineFriendRequest(friendshipId);
       setPendingRequests((prev) => prev.filter((r) => r.id !== friendshipId));
+      await loadData();
     } catch (err) {
       alert('Could not decline request');
+    }
+  };
+
+  const handleCancelRequest = async (targetUserId: string) => {
+    try {
+      await api.cancelFriendRequest(targetUserId);
+      setSuggestions((prev) =>
+        prev.map((s) =>
+          s.user.id === targetUserId
+            ? { ...s, friendship_status: 'none', friendship_id: null }
+            : s
+        )
+      );
+    } catch (err) {
+      alert('Could not cancel request');
     }
   };
 
@@ -374,10 +390,14 @@ export function DiscoverPeopleModal({
                         <span>{lang === 'bn' ? 'বন্ধু' : 'Friends'}</span>
                       </span>
                     ) : status === 'pending_sent' ? (
-                      <span className="px-2.5 py-1.5 rounded-xl bg-[#202c33] text-gray-400 font-semibold text-[11px] flex items-center gap-1">
-                        <Clock className="w-3 h-3 text-amber-400" />
-                        <span>{lang === 'bn' ? 'অনুরোধ পাঠানো' : 'Sent'}</span>
-                      </span>
+                      <button
+                        onClick={() => handleCancelRequest(u.id)}
+                        title={lang === 'bn' ? 'অনুরোধ বাতিল করুন' : 'Cancel friend request'}
+                        className="px-2.5 py-1.5 rounded-xl bg-red-500/15 hover:bg-red-500/25 text-red-400 font-semibold text-[11px] flex items-center gap-1 border border-red-500/30 transition-all active:scale-95"
+                      >
+                        <X className="w-3 h-3 text-red-400" />
+                        <span>{lang === 'bn' ? 'বাতিল' : 'Cancel'}</span>
+                      </button>
                     ) : status === 'pending_received' ? (
                       <button
                         onClick={() => handleAcceptRequest(sug.friendship_id, u.id)}

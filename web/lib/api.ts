@@ -164,6 +164,7 @@ export const api = {
   // Friends & Social Community (Facebook Features)
   getFriendSuggestions: () => request('/friends/suggestions'),
   sendFriendRequest: (userId: string) => request(`/friends/request/${userId}`, { method: 'POST' }),
+  cancelFriendRequest: (userId: string) => request(`/friends/cancel/${userId}`, { method: 'POST' }),
   acceptFriendRequest: (friendshipId: string) => request(`/friends/accept/${friendshipId}`, { method: 'POST' }),
   declineFriendRequest: (friendshipId: string) => request(`/friends/decline/${friendshipId}`, { method: 'POST' }),
   getMyFriends: () => request('/friends/my-friends'),

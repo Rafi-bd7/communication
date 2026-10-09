@@ -102,6 +102,13 @@ async def send_friend_request(
     if rel:
         if rel.status == "accepted":
             return {"message": "Already friends", "status": "friends", "id": rel.id}
+        elif rel.status == "declined":
+            # Re-send friend request if previously declined
+            rel.requester_id = current_user.id
+            rel.receiver_id = target_user_id
+            rel.status = "pending"
+            await db.commit()
+            return {"message": "Friend request sent", "status": "pending_sent", "id": rel.id}
         elif rel.requester_id == current_user.id:
             return {"message": "Request already sent", "status": "pending_sent", "id": rel.id}
         else:
@@ -121,6 +128,28 @@ async def send_friend_request(
     await db.refresh(new_rel)
 
     return {"message": "Friend request sent", "status": "pending_sent", "id": new_rel.id}
+
+@router.post("/cancel/{target_user_id}")
+async def cancel_friend_request(
+    target_user_id: str,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Cancel a pending friend request sent by current user"""
+    existing = await db.execute(
+        select(Friendship).where(
+            or_(
+                and_(Friendship.requester_id == current_user.id, Friendship.receiver_id == target_user_id),
+                Friendship.id == target_user_id
+            )
+        )
+    )
+    rel = existing.scalar_one_or_none()
+    if rel:
+        await db.delete(rel)
+        await db.commit()
+        return {"message": "Friend request cancelled", "status": "none"}
+    return {"message": "No request found", "status": "none"}
 
 @router.post("/accept/{friendship_id}")
 async def accept_friend_request(
@@ -152,9 +181,9 @@ async def decline_friend_request(
     if not rel or rel.receiver_id != current_user.id:
         raise HTTPException(status_code=404, detail="Friend request not found")
 
-    rel.status = "declined"
+    await db.delete(rel)
     await db.commit()
-    return {"message": "Friend request declined"}
+    return {"message": "Friend request declined", "status": "none"}
 
 @router.get("/my-friends", response_model=List[UserResponse])
 async def get_my_friends(
