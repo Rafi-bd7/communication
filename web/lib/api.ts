@@ -1,4 +1,5 @@
-const API_BASE = '/api';
+const BACKEND_URL = (process.env.NEXT_PUBLIC_BACKEND_URL || '').replace(/\/$/, '');
+const API_BASE = BACKEND_URL ? `${BACKEND_URL}/api` : '/api';
 
 export function getAuthToken(): string | null {
   if (typeof window === 'undefined') return null;
@@ -50,11 +51,13 @@ export const api = {
   // Auth
   register: (data: any) => request('/auth/register', { method: 'POST', body: JSON.stringify(data) }),
   login: (data: any) => request('/auth/login', { method: 'POST', body: JSON.stringify(data) }),
+  resetPassword: (data: { username_or_email: string; new_password: string; phone?: string }) =>
+    request('/auth/reset-password', { method: 'POST', body: JSON.stringify(data) }),
   getMe: () => request('/auth/me'),
   seedDemo: () => request('/auth/seed-demo', { method: 'POST' }),
 
   // Users
-  listUsers: () => request('/users/'),
+  listUsers: () => request('/users'),
   searchUsers: (q: string) => request(`/users/search?q=${encodeURIComponent(q)}`),
   updateProfile: (data: any) => request('/users/profile', { method: 'PUT', body: JSON.stringify(data) }),
 
@@ -100,7 +103,12 @@ export const api = {
       const err = await res.json().catch(() => ({ detail: 'Upload failed' }));
       throw new Error(err.detail || 'Upload failed');
     }
-    return res.json();
+    const data = await res.json();
+    let fileUrl = data.file_url || data.url;
+    if (fileUrl && fileUrl.startsWith('/') && BACKEND_URL) {
+      fileUrl = `${BACKEND_URL}${fileUrl}`;
+    }
+    return { ...data, file_url: fileUrl, url: fileUrl };
   },
   uploadMedia: async (file: File) => {
     return api.uploadFile(file);
@@ -163,8 +171,8 @@ export const api = {
 
   // Timeline Posts (Facebook Features)
   getTimelineFeed: () => request('/posts/feed'),
-  createPost: (data: { content: string; media_url?: string }) =>
-    request('/posts/', { method: 'POST', body: JSON.stringify(data) }),
+  createPost: (data: { content: string; media_url?: string; privacy?: string }) =>
+    request('/posts', { method: 'POST', body: JSON.stringify(data) }),
   likePost: (postId: string) => request(`/posts/${postId}/like`, { method: 'POST' }),
   getUserPosts: (userId: string) => request(`/posts/user/${userId}`),
 };

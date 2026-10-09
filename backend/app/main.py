@@ -51,8 +51,15 @@ async def lifespan(app: FastAPI):
                 avatar_url=None
             )
             session.add(admin_user)
-            await session.commit()
             logger.info("Admin account initialized (username: admin, password: admin123)")
+
+        # Ensure posts table has privacy column if created earlier
+        try:
+            from sqlalchemy import text
+            await session.execute(text("ALTER TABLE posts ADD COLUMN privacy VARCHAR(20) DEFAULT 'public'"))
+            await session.commit()
+        except Exception:
+            pass
 
     yield
     logger.info("Shutting down Adda communication platform backend...")
@@ -116,15 +123,37 @@ async def get_network_info():
     ip = get_system_lan_ip()
     
     # Read public tunnel URL from env var or from tunnel.txt file written by cloudflared
-    public_url = os.environ.get("ADDA_PUBLIC_URL", "")
+    public_url = os.environ.get("ADDA_PUBLIC_URL", "").strip()
     if not public_url:
-        tunnel_file = os.path.join(os.path.dirname(__file__), "..", "tunnel_url.txt")
-        try:
-            if os.path.exists(tunnel_file):
-                with open(tunnel_file, "r") as f:
-                    public_url = f.read().strip()
-        except Exception:
-            pass
+        candidates = [
+            os.path.join(os.path.dirname(__file__), "..", "tunnel_url.txt"),
+            os.path.join(os.path.dirname(__file__), "..", "..", "tunnel_url.txt"),
+            os.path.abspath("tunnel_url.txt"),
+            os.path.abspath(os.path.join("backend", "tunnel_url.txt")),
+        ]
+        for tf in candidates:
+            if os.path.exists(tf):
+                try:
+                    with open(tf, "rb") as f:
+                        raw = f.read()
+                    for enc in ["utf-16", "utf-8", "latin1"]:
+                        try:
+                            text = raw.decode(enc).replace("\x00", "").strip()
+                            if "http" in text:
+                                # Extract url
+                                for line in text.splitlines():
+                                    line = line.strip()
+                                    if line.startswith("http"):
+                                        public_url = line
+                                        break
+                                if public_url:
+                                    break
+                        except Exception:
+                            continue
+                    if public_url:
+                        break
+                except Exception:
+                    pass
     
     return {
         "lan_ip": ip,

@@ -29,11 +29,16 @@ export function useSocket(handlers: SocketEventHandlers = {}) {
       return;
     }
 
-    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const isLocalDev = window.location.port === '3000' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.hostname.startsWith('192.168.'));
-    const wsUrl = isLocalDev 
-      ? `${protocol}//${window.location.hostname}:8000/ws?token=${token}`
-      : `${protocol}//${window.location.host}/ws?token=${token}`;
+    let wsUrl: string;
+    const backendEnv = process.env.NEXT_PUBLIC_BACKEND_URL;
+    if (backendEnv) {
+      const isHttps = backendEnv.startsWith('https');
+      const cleanHost = backendEnv.replace(/^https?:\/\//, '').replace(/\/$/, '');
+      wsUrl = `${isHttps ? 'wss:' : 'ws:'}//${cleanHost}/ws?token=${token}`;
+    } else {
+      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+      wsUrl = `${protocol}//${window.location.host}/ws?token=${token}`;
+    }
 
     let socket: WebSocket;
     let reconnectTimeout: any = null;

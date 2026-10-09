@@ -5,17 +5,13 @@ import {
   Phone, 
   Video, 
   MoreVertical, 
-  Sparkles, 
   ArrowLeft, 
   ShieldAlert, 
-  Search,
-  Layers,
-  Bookmark
+  Search
 } from 'lucide-react';
 import { ConversationItem } from './ChatList';
 import { MessageBubble, MessageItem } from './MessageBubble';
 import { MessageInput } from './MessageInput';
-import { SmartReplyBar } from './SmartReplyBar';
 import { useAuth } from '@/hooks/useAuth';
 import { useLanguage } from '@/lib/i18n';
 import { api } from '@/lib/api';
@@ -31,10 +27,7 @@ interface ChatWindowProps {
   onDeleteMessage: (messageId: string) => void;
   onReactMessage: (messageId: string, emoji: string) => void;
   onStartCall: (callType: 'voice' | 'video') => void;
-  onOpenAI: () => void;
   onTyping: (isTyping: boolean) => void;
-  onOpenSharedBoard?: () => void;
-  onBookmarkMessage?: (message: MessageItem) => void;
   onOpenProfile?: (user: any) => void;
 }
 
@@ -48,10 +41,7 @@ export function ChatWindow({
   onDeleteMessage,
   onReactMessage,
   onStartCall,
-  onOpenAI,
   onTyping,
-  onOpenSharedBoard,
-  onBookmarkMessage,
   onOpenProfile,
 }: ChatWindowProps) {
   const { user } = useAuth();
@@ -61,6 +51,8 @@ export function ChatWindow({
   const [showMenu, setShowMenu] = useState(false);
   const [showReportModal, setShowReportModal] = useState(false);
   const [reportReason, setReportReason] = useState('');
+  const [showSearch, setShowSearch] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
 
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
 
@@ -72,13 +64,6 @@ export function ChatWindow({
   const isDirect = conversation.type === 'direct';
   const isGroup = conversation.type === 'group';
 
-  const handleSmartReply = (replyText: string) => {
-    onSendMessage({
-      content: replyText,
-      message_type: 'text',
-    });
-  };
-
   const handleReportSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!reportReason.trim()) return;
@@ -87,7 +72,7 @@ export function ChatWindow({
         reported_user_id: otherMember?.id,
         reason: reportReason.trim(),
       });
-      alert(lang === 'bn' ? 'রিপোর্ট সফলভাবে জমা দেওয়া হয়েছে।' : 'Report submitted for admin review.');
+      alert(lang === 'bn' ? 'রিপোর্ট সফলভাবে জমা দেওয়া হয়েছে।' : 'Report submitted for admin review.');
       setShowReportModal(false);
       setReportReason('');
     } catch (err) {
@@ -95,7 +80,11 @@ export function ChatWindow({
     }
   };
 
-  const title = isGroup ? (conversation.name || 'Adda Room') : (otherMember?.full_name || otherMember?.username || 'Chat');
+  const title = isGroup ? (conversation.name || 'Room') : (otherMember?.full_name || otherMember?.username || 'Chat');
+
+  const filteredMessages = searchQuery.trim()
+    ? messages.filter(m => m.content?.toLowerCase().includes(searchQuery.toLowerCase()))
+    : messages;
 
   return (
     <div className="flex-1 h-full bg-[#0b141a] flex flex-col overflow-hidden select-none">
@@ -119,7 +108,6 @@ export function ChatWindow({
               }
             }}
             className={`flex items-center gap-3 min-w-0 ${isDirect ? 'cursor-pointer hover:opacity-90 transition-opacity' : ''}`}
-            title={isDirect && otherMember ? (lang === 'bn' ? `${otherMember.full_name} এর ফেসবুক প্রোফাইল দেখুন` : 'View Profile') : undefined}
           >
             <UserAvatar
               name={title}
@@ -132,12 +120,12 @@ export function ChatWindow({
             {/* Title & Status */}
             <div className="min-w-0">
               <div className="flex items-center gap-2">
-                <h3 className="text-sm font-bold text-white truncate hover:underline">
+                <h3 className="text-sm font-bold text-white truncate">
                   {title}
                 </h3>
                 {isGroup && (
-                  <span className="px-1.5 py-0.2 rounded-md bg-purple-500/20 text-purple-300 font-semibold text-[10px] hidden sm:inline-block">
-                    {lang === 'bn' ? 'রুম' : 'Room'}
+                  <span className="px-1.5 py-0.2 rounded-md bg-emerald-500/20 text-emerald-300 font-semibold text-[10px] hidden sm:inline-block">
+                    {lang === 'bn' ? 'গ্রুপ' : 'Group'}
                   </span>
                 )}
               </div>
@@ -162,30 +150,17 @@ export function ChatWindow({
 
         {/* Action Controls */}
         <div className="flex items-center gap-1 sm:gap-2">
-          {/* Shared Board for Group Rooms */}
-          {isGroup && onOpenSharedBoard && (
-            <button
-              type="button"
-              onClick={onOpenSharedBoard}
-              title={t.sharedBoardTitle}
-              className="px-2.5 py-1.5 rounded-xl bg-[#202c33] hover:bg-[#2a3942] text-xs font-semibold text-brand-emerald flex items-center gap-1.5 border border-brand-border/60 transition-colors shadow-sm"
-            >
-              <Layers className="w-4 h-4" />
-              <span className="hidden sm:inline">{t.sharedBoardTitle}</span>
-            </button>
-          )}
-
-          {/* AI Assistant */}
+          {/* Search messages */}
           <button
             type="button"
-            onClick={onOpenAI}
-            title={t.navAI}
-            className="p-2 rounded-xl text-purple-400 hover:bg-purple-500/10 transition-colors"
+            onClick={() => { setShowSearch(!showSearch); setSearchQuery(''); }}
+            title={lang === 'bn' ? 'বার্তা খুঁজুন' : 'Search messages'}
+            className="p-2 rounded-xl text-gray-400 hover:text-white hover:bg-[#202c33] transition-colors"
           >
-            <Sparkles className="w-5 h-5" />
+            <Search className="w-5 h-5" />
           </button>
 
-          {/* Audio Call */}
+          {/* Voice Call */}
           {isDirect && (
             <button
               type="button"
@@ -221,19 +196,6 @@ export function ChatWindow({
 
             {showMenu && (
               <div className="absolute right-0 top-12 bg-[#182229] border border-brand-border p-1.5 rounded-2xl shadow-2xl w-48 z-30 flex flex-col gap-0.5 text-xs text-gray-200 animate-fade-in">
-                {isGroup && onOpenSharedBoard && (
-                  <button
-                    onClick={() => {
-                      onOpenSharedBoard();
-                      setShowMenu(false);
-                    }}
-                    className="flex items-center gap-2 px-3 py-2 rounded-xl hover:bg-[#202c33] text-brand-emerald transition-colors text-left"
-                  >
-                    <Layers className="w-4 h-4" />
-                    <span>{t.sharedBoardTitle}</span>
-                  </button>
-                )}
-
                 <button
                   onClick={() => {
                     setShowReportModal(true);
@@ -242,13 +204,31 @@ export function ChatWindow({
                   className="flex items-center gap-2 px-3 py-2 rounded-xl hover:bg-red-500/10 text-red-400 transition-colors text-left"
                 >
                   <ShieldAlert className="w-4 h-4" />
-                  <span>{lang === 'bn' ? 'রিপোর্ট করুন' : 'Report Conversation'}</span>
+                  <span>{lang === 'bn' ? 'রিপোর্ট করুন' : 'Report'}</span>
                 </button>
               </div>
             )}
           </div>
         </div>
       </div>
+
+      {/* In-chat Message Search Bar */}
+      {showSearch && (
+        <div className="px-4 py-2 bg-[#111b21] border-b border-brand-border flex items-center gap-2">
+          <Search className="w-4 h-4 text-gray-400 flex-shrink-0" />
+          <input
+            autoFocus
+            type="text"
+            value={searchQuery}
+            onChange={e => setSearchQuery(e.target.value)}
+            placeholder={lang === 'bn' ? 'বার্তায় খুঁজুন...' : 'Search in messages...'}
+            className="flex-1 bg-transparent text-sm text-white placeholder-gray-500 outline-none"
+          />
+          {searchQuery && (
+            <button onClick={() => setSearchQuery('')} className="text-gray-400 hover:text-white text-xs">✕</button>
+          )}
+        </div>
+      )}
 
       {/* Messages Timeline */}
       <div 
@@ -258,12 +238,16 @@ export function ChatWindow({
           backgroundSize: '24px 24px'
         }}
       >
-        {messages.length === 0 ? (
+        {filteredMessages.length === 0 ? (
           <div className="h-full flex flex-col items-center justify-center text-center text-gray-500">
-            <p className="text-sm">{lang === 'bn' ? 'এখনো কোনো বার্তা নেই। আড্ডা শুরু করতে একটি বার্তা পাঠান!' : 'No messages yet. Send a greeting to start chatting!'}</p>
+            <p className="text-sm">
+              {searchQuery 
+                ? (lang === 'bn' ? 'কোনো বার্তা পাওয়া যায়নি।' : 'No messages found.')
+                : (lang === 'bn' ? 'এখনো কোনো বার্তা নেই। আড্ডা শুরু করতে একটি বার্তা পাঠান!' : 'No messages yet. Send a greeting to start chatting!')}
+            </p>
           </div>
         ) : (
-          messages.map((msg) => (
+          filteredMessages.map((msg) => (
             <MessageBubble
               key={msg.id}
               message={msg}
@@ -271,19 +255,11 @@ export function ChatWindow({
               onEdit={(m) => setEditingMessage(m)}
               onDelete={(id) => onDeleteMessage(id)}
               onReact={(id, emoji) => onReactMessage(id, emoji)}
-              onBookmark={onBookmarkMessage}
             />
           ))
         )}
         <div ref={messagesEndRef} />
       </div>
-
-      {/* AI Smart Replies Pill Bar */}
-      <SmartReplyBar
-        conversationId={conversation.id}
-        lastMessage={messages[messages.length - 1]?.content}
-        onSelectReply={handleSmartReply}
-      />
 
       {/* Message Input Bar */}
       <MessageInput
@@ -299,12 +275,12 @@ export function ChatWindow({
           <form onSubmit={handleReportSubmit} className="bg-[#111b21] border border-brand-border rounded-2xl w-full max-w-sm p-5 shadow-2xl flex flex-col gap-3 text-white">
             <h3 className="font-bold text-sm flex items-center gap-2 text-red-400">
               <ShieldAlert className="w-5 h-5" />
-              <span>{lang === 'bn' ? 'আড্ডা বা ইউজার রিপোর্ট করুন' : 'Report Conversation'}</span>
+              <span>{lang === 'bn' ? 'রিপোর্ট করুন' : 'Report'}</span>
             </h3>
             <textarea
               value={reportReason}
               onChange={(e) => setReportReason(e.target.value)}
-              placeholder={lang === 'bn' ? 'রিপোর্টের কারণ লিখুন (স্প্যাম, হয়রানি, অশালীন আচরণ ইত্যাদি)' : 'Why are you reporting this user or conversation? (Spam, Harassment, Inappropriate)'}
+              placeholder={lang === 'bn' ? 'রিপোর্টের কারণ লিখুন (স্প্যাম, হয়রানি ইত্যাদি)' : 'Why are you reporting? (Spam, Harassment, etc.)'}
               required
               rows={3}
               className="w-full bg-[#202c33] text-xs rounded-xl p-3 border border-brand-border focus:outline-none focus:border-red-400 text-white"
@@ -321,7 +297,7 @@ export function ChatWindow({
                 type="submit"
                 className="flex-1 py-2 rounded-xl bg-red-600 hover:bg-red-700 text-white text-xs font-bold"
               >
-                {lang === 'bn' ? 'জমা দিন' : 'Submit Report'}
+                {lang === 'bn' ? 'জমা দিন' : 'Submit'}
               </button>
             </div>
           </form>

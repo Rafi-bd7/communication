@@ -63,37 +63,59 @@ class SoundFX {
     } catch (e) {}
   }
 
-  // Call ringtone loop
+  // Call ringtone loop (Audible sound + Mobile vibration)
   startRingtone() {
     this.stopRingtone();
+
+    // Trigger mobile device vibration
+    if (typeof window !== 'undefined' && 'vibrate' in navigator) {
+      try {
+        navigator.vibrate([1000, 500, 1000, 500, 1000]);
+      } catch (e) {}
+    }
+
     const playChime = () => {
+      // Re-trigger vibration on each ring cycle
+      if (typeof window !== 'undefined' && 'vibrate' in navigator) {
+        try {
+          navigator.vibrate([800, 300, 800, 400]);
+        } catch (e) {}
+      }
+
       const ctx = this.getContext();
       if (!ctx) return;
       try {
         const now = ctx.currentTime;
-        [440, 554.37, 659.25].forEach((freq, i) => {
+        // Dual-tone harmonic ring (Telephone ring frequency 440Hz + 480Hz)
+        [440, 480].forEach((freq) => {
           const osc = ctx.createOscillator();
           const gain = ctx.createGain();
-          osc.type = 'triangle';
-          osc.frequency.setValueAtTime(freq, now + i * 0.12);
-          gain.gain.setValueAtTime(0.2, now + i * 0.12);
-          gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.12 + 0.3);
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(freq, now);
+          gain.gain.setValueAtTime(0.25, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 1.6);
           osc.connect(gain);
           gain.connect(ctx.destination);
-          osc.start(now + i * 0.12);
-          osc.stop(now + i * 0.12 + 0.3);
+          osc.start(now);
+          osc.stop(now + 1.6);
         });
       } catch (e) {}
     };
 
     playChime();
-    this.ringInterval = setInterval(playChime, 2500);
+    this.ringInterval = setInterval(playChime, 2400);
   }
 
   stopRingtone() {
     if (this.ringInterval) {
       clearInterval(this.ringInterval);
       this.ringInterval = null;
+    }
+    // Stop vibration
+    if (typeof window !== 'undefined' && 'vibrate' in navigator) {
+      try {
+        navigator.vibrate(0);
+      } catch (e) {}
     }
   }
 }

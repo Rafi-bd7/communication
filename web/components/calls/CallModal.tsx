@@ -69,6 +69,7 @@ export function CallModal({
   useEffect(() => {
     if (localVideoRef.current && localStream) {
       localVideoRef.current.srcObject = localStream;
+      localVideoRef.current.play().catch(() => {});
     }
   }, [localStream]);
 
@@ -76,6 +77,7 @@ export function CallModal({
   useEffect(() => {
     if (remoteVideoRef.current && remoteStream) {
       remoteVideoRef.current.srcObject = remoteStream;
+      remoteVideoRef.current.play().catch(() => {});
     }
   }, [remoteStream]);
 
@@ -175,9 +177,21 @@ export function CallModal({
         </div>
       </div>
 
+      {/* Hidden audio element ensures voice calls always play audio even without video */}
+      <audio
+        ref={(el) => {
+          if (el && remoteStream && el.srcObject !== remoteStream) {
+            el.srcObject = remoteStream;
+            el.play().catch(() => {});
+          }
+        }}
+        autoPlay
+        playsInline
+      />
+
       {/* Main Video Stream Stage */}
       <div className="flex-1 relative flex items-center justify-center overflow-hidden">
-        {remoteStream ? (
+        {activeCall.call_type === 'video' && remoteStream ? (
           <video
             ref={remoteVideoRef}
             autoPlay
@@ -195,7 +209,11 @@ export function CallModal({
               />
               <span className="absolute inset-0 rounded-full border-4 border-brand-emerald/40 animate-ping pointer-events-none" />
             </div>
-            <p className="text-sm font-medium text-gray-300">Connecting media stream...</p>
+            <p className="text-sm font-medium text-gray-300">
+              {remoteStream 
+                ? (activeCall.call_type === 'video' ? 'ভিডিও কল সংযুক্ত' : 'কথা বলুন... কল চলছে 🎙️') 
+                : 'কানেক্ট হচ্ছে... অপেক্ষা করুন'}
+            </p>
           </div>
         )}
 

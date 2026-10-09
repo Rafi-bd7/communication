@@ -10,6 +10,7 @@ import {
   Share2, 
   Sparkles, 
   Globe, 
+  Users,
   Camera, 
   Trash2,
   RefreshCw
@@ -36,6 +37,7 @@ export function TimelineFeedDrawer({
   const { lang, t } = useLanguage();
   const [posts, setPosts] = useState<any[]>([]);
   const [content, setContent] = useState('');
+  const [privacy, setPrivacy] = useState<'public' | 'friends'>('public');
   const [mediaUrl, setMediaUrl] = useState<string | null>(null);
   const [isUploadingMedia, setIsUploadingMedia] = useState(false);
   const [isPublishing, setIsPublishing] = useState(false);
@@ -86,12 +88,13 @@ export function TimelineFeedDrawer({
       const newPost = await api.createPost({
         content: content.trim(),
         media_url: mediaUrl || undefined,
+        privacy: privacy,
       });
       setPosts([newPost, ...posts]);
       setContent('');
       setMediaUrl(null);
-    } catch (err) {
-      alert('Could not publish post');
+    } catch (err: any) {
+      alert(err.message || (lang === 'bn' ? 'পোস্ট প্রকাশ করা সম্ভব হয়নি' : 'Could not publish post'));
     } finally {
       setIsPublishing(false);
     }
@@ -179,22 +182,41 @@ export function TimelineFeedDrawer({
 
               {/* Action Toolbar */}
               <div className="pt-2 border-t border-brand-border/60 flex items-center justify-between">
-                <input
-                  type="file"
-                  ref={fileInputRef}
-                  accept="image/*"
-                  onChange={handleMediaUpload}
-                  className="hidden"
-                />
-                <button
-                  type="button"
-                  onClick={() => fileInputRef.current?.click()}
-                  disabled={isUploadingMedia}
-                  className="text-xs text-brand-emerald font-bold hover:bg-brand-emerald/10 px-3 py-1.5 rounded-xl flex items-center gap-1.5 transition-colors"
-                >
-                  <ImageIcon className="w-4 h-4" />
-                  <span>{isUploadingMedia ? (lang === 'bn' ? 'আপলোড হচ্ছে...' : 'Uploading...') : (lang === 'bn' ? 'ছবি যুক্ত করুন' : 'Add Photo')}</span>
-                </button>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="file"
+                    ref={fileInputRef}
+                    accept="image/*"
+                    onChange={handleMediaUpload}
+                    className="hidden"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={isUploadingMedia}
+                    className="text-xs text-brand-emerald font-bold hover:bg-brand-emerald/10 px-3 py-1.5 rounded-xl flex items-center gap-1.5 transition-colors"
+                  >
+                    <ImageIcon className="w-4 h-4" />
+                    <span>{isUploadingMedia ? (lang === 'bn' ? 'আপলোড হচ্ছে...' : 'Uploading...') : (lang === 'bn' ? 'ছবি' : 'Photo')}</span>
+                  </button>
+
+                  {/* Privacy Selector */}
+                  <div className="flex items-center gap-1 bg-[#202c33] rounded-xl px-2.5 py-1 text-xs border border-brand-border/70">
+                    {privacy === 'public' ? <Globe className="w-3.5 h-3.5 text-blue-400" /> : <Users className="w-3.5 h-3.5 text-emerald-400" />}
+                    <select
+                      value={privacy}
+                      onChange={(e) => setPrivacy(e.target.value as 'public' | 'friends')}
+                      className="bg-transparent text-gray-200 text-xs focus:outline-none cursor-pointer"
+                    >
+                      <option value="public" className="bg-[#111b21] text-white">
+                        {lang === 'bn' ? '🌐 পাবলিক (Public)' : '🌐 Public'}
+                      </option>
+                      <option value="friends" className="bg-[#111b21] text-white">
+                        {lang === 'bn' ? '👥 শুধু বন্ধুরা (Friends)' : '👥 Friends Only'}
+                      </option>
+                    </select>
+                  </div>
+                </div>
 
                 <button
                   type="submit"
@@ -288,9 +310,22 @@ export function TimelineFeedDrawer({
                     <span>{post.likes_count} {lang === 'bn' ? 'পছন্দ' : 'Likes'}</span>
                   </button>
 
-                  <span className="text-[11px] text-gray-500 flex items-center gap-1">
-                    <Globe className="w-3.5 h-3.5" />
-                    <span>Public</span>
+                  <span className={`text-[11px] flex items-center gap-1 font-medium px-2 py-0.5 rounded-full ${
+                    post.privacy === 'friends'
+                      ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
+                      : 'bg-blue-500/10 text-blue-400 border border-blue-500/20'
+                  }`}>
+                    {post.privacy === 'friends' ? (
+                      <>
+                        <Users className="w-3 h-3" />
+                        <span>{lang === 'bn' ? 'শুধু বন্ধুরা' : 'Friends'}</span>
+                      </>
+                    ) : (
+                      <>
+                        <Globe className="w-3 h-3" />
+                        <span>{lang === 'bn' ? 'পাবলিক' : 'Public'}</span>
+                      </>
+                    )}
                   </span>
                 </div>
               </div>

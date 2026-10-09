@@ -107,6 +107,7 @@ async def send_friend_request(
         else:
             # Auto-accept if mutual
             rel.status = "accepted"
+            await get_or_create_direct_conversation(db, current_user.id, target_user_id)
             await db.commit()
             return {"message": "Mutual request accepted", "status": "friends", "id": rel.id}
 

@@ -10,6 +10,7 @@ from app.schemas.schemas import UserResponse, UserUpdate
 
 router = APIRouter(prefix="/users", tags=["users"])
 
+@router.get("", response_model=List[UserResponse])
 @router.get("/", response_model=List[UserResponse])
 async def list_users(
     skip: int = 0,

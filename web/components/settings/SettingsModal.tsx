@@ -11,15 +11,18 @@ import {
   ShieldCheck, 
   Smartphone, 
   Moon, 
+  Sun,
   BellOff, 
   Globe, 
   LogOut,
   Laptop,
   Camera,
-  Upload
+  Upload,
+  Palette
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useLanguage } from '@/lib/i18n';
+import { useTheme } from '@/hooks/useTheme';
 import { api } from '@/lib/api';
 
 interface SettingsModalProps {
@@ -29,13 +32,14 @@ interface SettingsModalProps {
 
 export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   const { user, updateUser } = useAuth();
-  const { t, lang } = useLanguage();
+  const { t, lang, setLanguage } = useLanguage();
+  const { theme, toggleTheme } = useTheme();
 
   const avatarInputRef = useRef<HTMLInputElement | null>(null);
   const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
   const [currentAvatar, setCurrentAvatar] = useState(user?.avatar_url || '');
 
-  const [activeTab, setActiveTab] = useState<'profile' | 'privacy' | 'devices' | 'quiet'>('profile');
+  const [activeTab, setActiveTab] = useState<'profile' | 'appearance' | 'language' | 'privacy' | 'devices' | 'quiet'>('profile');
   const [fullName, setFullName] = useState(user?.full_name || '');
   const [bio, setBio] = useState(user?.bio || '');
   const [phone, setPhone] = useState(user?.phone || '');
@@ -115,6 +119,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
         <div className="flex items-center gap-1 p-2 bg-[#182229]/60 border-b border-brand-border overflow-x-auto">
           {[
             { id: 'profile', label: lang === 'bn' ? 'প্রোফাইল' : 'Profile', icon: User },
+            { id: 'language', label: lang === 'bn' ? 'ভাষা ও থিম (Language & Theme)' : 'Language & Theme (ভাষা ও থিম)', icon: Globe },
             { id: 'privacy', label: lang === 'bn' ? 'প্রাইভেসি স্ন্যাপশট' : 'Privacy Snapshot', icon: ShieldCheck },
             { id: 'devices', label: lang === 'bn' ? 'বিশ্বস্ত ডিভাইস' : 'Trusted Devices', icon: Smartphone },
             { id: 'quiet', label: lang === 'bn' ? 'নীরব সময়' : 'Quiet Hours', icon: Moon },
@@ -249,7 +254,138 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
           </div>
         )}
 
-        {/* Tab 2: Privacy Snapshot */}
+        {/* Tab 2: Language & Theme (Day/Night Mode & Language Settings) */}
+        {activeTab === 'language' && (
+          <div className="flex-1 overflow-y-auto p-6 flex flex-col gap-6 text-xs">
+            {/* Theme Section */}
+            <div>
+              <div className="bg-[#182229] border border-brand-border rounded-2xl p-4 mb-3">
+                <h4 className="font-bold text-sm text-brand-emerald mb-1 flex items-center gap-2">
+                  <Palette className="w-4 h-4 text-brand-emerald" />
+                  <span>{lang === 'bn' ? 'থিম নির্বাচন (Day / Night Mode)' : 'Display Theme (Day / Night)'}</span>
+                </h4>
+                <p className="text-gray-400 text-[11px] leading-relaxed">
+                  {lang === 'bn' 
+                    ? 'আপনার পছন্দের ডিসপ্লে মোড নির্বাচন করুন। রাতের চোখের সুরক্ষায় নাইট মোড অথবা দিনের কাজের জন্য ডে মোড বেছে নিন।' 
+                    : 'Choose between Day (Light) or Night (Dark) mode for your preference.'}
+                </p>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <button
+                  type="button"
+                  onClick={() => { if (theme !== 'dark') toggleTheme(); }}
+                  className={`p-4 rounded-2xl border flex flex-col items-center justify-center gap-2.5 transition-all cursor-pointer ${
+                    theme === 'dark'
+                      ? 'border-brand-emerald bg-brand-emerald/15 text-white ring-2 ring-brand-emerald/40 shadow-lg'
+                      : 'border-brand-border bg-[#202c33] text-gray-400 hover:text-white hover:border-gray-500'
+                  }`}
+                >
+                  <div className={`p-2.5 rounded-full ${theme === 'dark' ? 'bg-brand-emerald/20 text-brand-emerald' : 'bg-gray-800 text-gray-400'}`}>
+                    <Moon className="w-5 h-5" />
+                  </div>
+                  <div className="text-center">
+                    <span className="font-bold text-xs block">{lang === 'bn' ? 'নাইট মোড' : 'Night (Dark)'}</span>
+                    <span className="text-[10px] text-gray-400 block mt-0.5">{lang === 'bn' ? 'গাঢ় কালার স্কিম' : 'Sleek dark theme'}</span>
+                  </div>
+                  {theme === 'dark' && (
+                    <span className="inline-flex items-center gap-1 text-[10px] text-brand-emerald font-semibold">
+                      <Check className="w-3 h-3" /> {lang === 'bn' ? 'সক্রিয়' : 'Active'}
+                    </span>
+                  )}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => { if (theme !== 'light') toggleTheme(); }}
+                  className={`p-4 rounded-2xl border flex flex-col items-center justify-center gap-2.5 transition-all cursor-pointer ${
+                    theme === 'light'
+                      ? 'border-brand-emerald bg-brand-emerald/15 text-white ring-2 ring-brand-emerald/40 shadow-lg'
+                      : 'border-brand-border bg-[#202c33] text-gray-400 hover:text-white hover:border-gray-500'
+                  }`}
+                >
+                  <div className={`p-2.5 rounded-full ${theme === 'light' ? 'bg-amber-400/20 text-amber-400' : 'bg-gray-800 text-gray-400'}`}>
+                    <Sun className="w-5 h-5" />
+                  </div>
+                  <div className="text-center">
+                    <span className="font-bold text-xs block">{lang === 'bn' ? 'ডে মোড' : 'Day (Light)'}</span>
+                    <span className="text-[10px] text-gray-400 block mt-0.5">{lang === 'bn' ? 'উজ্জ্বল কালার স্কিম' : 'Clean light theme'}</span>
+                  </div>
+                  {theme === 'light' && (
+                    <span className="inline-flex items-center gap-1 text-brand-emerald font-semibold text-[10px]">
+                      <Check className="w-3 h-3" /> {lang === 'bn' ? 'সক্রিয়' : 'Active'}
+                    </span>
+                  )}
+                </button>
+              </div>
+            </div>
+
+            {/* Language Section */}
+            <div>
+              <div className="bg-[#182229] border border-brand-border rounded-2xl p-4 mb-3">
+                <h4 className="font-bold text-sm text-brand-emerald mb-1 flex items-center gap-2">
+                  <Globe className="w-4 h-4 text-brand-emerald" />
+                  <span>{lang === 'bn' ? 'ভাষা নির্বাচন (Language Selection)' : 'Language Selection'}</span>
+                </h4>
+                <p className="text-gray-400 text-[11px] leading-relaxed">
+                  {lang === 'bn'
+                    ? 'আপনার সুবিধার জন্য ভাষা নির্বাচন করুন। আপনি চাইলে যেকোনো সময় সম্পূর্ণ অ্যাপ বাংলায় বা ইংরেজিতে পরিবর্তন করতে পারেন।'
+                    : 'Select your preferred language. You can switch between Bengali and English anytime.'}
+                </p>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <button
+                  type="button"
+                  onClick={() => setLanguage('bn')}
+                  className={`p-4 rounded-2xl border flex flex-col items-center gap-2 transition-all text-center ${
+                    lang === 'bn'
+                      ? 'border-brand-emerald bg-brand-emerald/15 text-white ring-2 ring-brand-emerald/50 shadow-lg'
+                      : 'border-brand-border bg-[#202c33] text-gray-400 hover:text-white hover:border-gray-500'
+                  }`}
+                >
+                  <span className="text-2xl">🇧🇩</span>
+                  <div>
+                    <h5 className="font-bold text-xs text-white">বাংলা</h5>
+                    <p className="text-[10px] text-gray-400 mt-0.5">বাংলা ভাষা</p>
+                  </div>
+                  {lang === 'bn' ? (
+                    <span className="px-2 py-0.5 rounded-full bg-brand-emerald text-brand-dark text-[10px] font-bold flex items-center gap-1">
+                      <Check className="w-3 h-3" /> সক্রিয়
+                    </span>
+                  ) : (
+                    <span className="text-[10px] text-gray-500">নির্বাচন করুন</span>
+                  )}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setLanguage('en')}
+                  className={`p-4 rounded-2xl border flex flex-col items-center gap-2 transition-all text-center ${
+                    lang === 'en'
+                      ? 'border-brand-emerald bg-brand-emerald/15 text-white ring-2 ring-brand-emerald/50 shadow-lg'
+                      : 'border-brand-border bg-[#202c33] text-gray-400 hover:text-white hover:border-gray-500'
+                  }`}
+                >
+                  <span className="text-2xl">🇺🇸</span>
+                  <div>
+                    <h5 className="font-bold text-xs text-white">English</h5>
+                    <p className="text-[10px] text-gray-400 mt-0.5">English Language</p>
+                  </div>
+                  {lang === 'en' ? (
+                    <span className="px-2 py-0.5 rounded-full bg-brand-emerald text-brand-dark text-[10px] font-bold flex items-center gap-1">
+                      <Check className="w-3 h-3" /> Active
+                    </span>
+                  ) : (
+                    <span className="text-[10px] text-gray-500">Select</span>
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Tab 3: Privacy Snapshot */}
         {activeTab === 'privacy' && (
           <div className="p-6 flex flex-col gap-5 flex-1 overflow-y-auto text-xs">
             <div className="bg-[#182229] border border-brand-border rounded-2xl p-4">

@@ -22,17 +22,22 @@ export function DeviceConnectModal({ isOpen, onClose }: DeviceConnectModalProps)
     api.getNetworkInfo()
       .then((info) => {
         setNetworkInfo(info);
-        // Default to public mode if public_url exists, else LAN
-        if (!info.public_url) setActiveMode('lan');
+        const isCurrentPublic = typeof window !== 'undefined' && !window.location.hostname.match(/^(localhost|127\.0\.0\.1|192\.168\.|10\.|172\.(1[6-9]|2[0-9]|3[0-1])\.)/);
+        if (info.public_url || isCurrentPublic) {
+          setActiveMode('public');
+        } else {
+          setActiveMode('lan');
+        }
       })
       .catch(() => {
         const host = typeof window !== 'undefined' ? window.location.hostname : 'localhost';
+        const isCurrentPublic = typeof window !== 'undefined' && !host.match(/^(localhost|127\.0\.0\.1|192\.168\.|10\.|172\.(1[6-9]|2[0-9]|3[0-1])\.)/);
         setNetworkInfo({
           lan_ip: host,
           frontend_url: `http://${host}:3000`,
-          public_url: undefined,
+          public_url: isCurrentPublic ? window.location.origin : undefined,
         });
-        setActiveMode('lan');
+        setActiveMode(isCurrentPublic ? 'public' : 'lan');
       })
       .finally(() => setIsLoading(false));
   };
@@ -45,8 +50,12 @@ export function DeviceConnectModal({ isOpen, onClose }: DeviceConnectModalProps)
 
   if (!isOpen) return null;
 
-  const activeUrl = activeMode === 'public' && networkInfo?.public_url
-    ? networkInfo.public_url
+  const isCurrentPublic = typeof window !== 'undefined' && !window.location.hostname.match(/^(localhost|127\.0\.0\.1|192\.168\.|10\.|172\.(1[6-9]|2[0-9]|3[0-1])\.)/);
+  const detectedPublicUrl = networkInfo?.public_url || (isCurrentPublic && typeof window !== 'undefined' ? window.location.origin : '');
+  const hasPublic = !!detectedPublicUrl;
+
+  const activeUrl = activeMode === 'public' && detectedPublicUrl
+    ? detectedPublicUrl
     : (networkInfo?.frontend_url || (typeof window !== 'undefined' ? window.location.origin : ''));
 
   const handleCopy = (url: string) => {
@@ -60,8 +69,6 @@ export function DeviceConnectModal({ isOpen, onClose }: DeviceConnectModalProps)
   const qrImageUrl = activeUrl
     ? `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(activeUrl)}&bgcolor=111b21&color=00a884&margin=10`
     : '';
-
-  const hasPublic = !!networkInfo?.public_url;
 
   return (
     <div className="fixed inset-0 z-50 bg-black/90 backdrop-blur-md flex items-center justify-center p-4 select-none">

@@ -172,6 +172,7 @@ class Post(Base):
     content = Column(Text, nullable=False)
     media_url = Column(String(255), nullable=True)
     likes_count = Column(Integer, default=0)
+    privacy = Column(String(20), default="public")  # "public" or "friends"
     created_at = Column(DateTime, default=utc_now)
 
     author = relationship("User")

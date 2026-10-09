@@ -25,7 +25,11 @@ ENV/
 # Database & SQLite
 *.sqlite3
 *.db
+*.db.bak
+*.bak
 *.db-journal
+tunnel_url.txt
+backend/tunnel_url.txt
 
 # Uploads
 backend/uploads/*

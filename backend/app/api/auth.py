@@ -6,7 +6,7 @@ from sqlalchemy import select, or_
 from app.core.database import get_db
 from app.core.security import get_password_hash, verify_password, create_access_token, get_current_user
 from app.models.models import User
-from app.schemas.schemas import UserCreate, UserLogin, UserResponse, TokenResponse
+from app.schemas.schemas import UserCreate, UserLogin, UserResponse, TokenResponse, PasswordResetRequest
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -84,6 +84,44 @@ async def login(credentials: UserLogin, db: AsyncSession = Depends(get_db)):
 @router.get("/me", response_model=UserResponse)
 async def get_me(current_user: User = Depends(get_current_user)):
     return UserResponse.model_validate(current_user)
+
+@router.post("/reset-password")
+async def reset_password(body: PasswordResetRequest, db: AsyncSession = Depends(get_db)):
+    # Search by email or username
+    stmt = select(User).where(
+        or_(
+            User.email == body.username_or_email,
+            User.username == body.username_or_email
+        )
+    )
+    result = await db.execute(stmt)
+    user = result.scalar_one_or_none()
+
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="No account found with this username or email"
+        )
+
+    # Optional phone verification if phone was entered and user has phone saved
+    if body.phone and user.phone:
+        clean_user_phone = "".join(filter(str.isdigit, user.phone))
+        clean_body_phone = "".join(filter(str.isdigit, body.phone))
+        if clean_user_phone and clean_body_phone and clean_user_phone != clean_body_phone:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Provided phone number does not match registered phone"
+            )
+
+    if len(body.new_password) < 6:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="New password must be at least 6 characters long"
+        )
+
+    user.hashed_password = get_password_hash(body.new_password)
+    await db.commit()
+    return {"message": "Password reset successfully. You can now login with your new password."}
 
 @router.post("/seed-demo")
 async def seed_demo_users(db: AsyncSession = Depends(get_db)):

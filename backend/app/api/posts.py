@@ -15,11 +15,13 @@ router = APIRouter(prefix="/posts", tags=["posts"])
 class PostCreate(BaseModel):
     content: str
     media_url: Optional[str] = None
+    privacy: Optional[str] = "public"  # "public" or "friends"
 
 class PostResponse(BaseModel):
     id: str
     content: str
     media_url: Optional[str] = None
+    privacy: str = "public"
     likes_count: int
     created_at: datetime
     author: UserResponse
@@ -47,12 +49,14 @@ async def get_timeline_feed(
                 id=p.id,
                 content=p.content,
                 media_url=p.media_url,
+                privacy=getattr(p, 'privacy', 'public') or 'public',
                 likes_count=p.likes_count,
                 created_at=p.created_at,
                 author=UserResponse.model_validate(author)
             ))
     return response
 
+@router.post("", response_model=PostResponse)
 @router.post("/", response_model=PostResponse)
 async def create_post(
     post_in: PostCreate,
@@ -67,6 +71,7 @@ async def create_post(
         user_id=current_user.id,
         content=post_in.content,
         media_url=post_in.media_url,
+        privacy=post_in.privacy or "public",
         likes_count=0
     )
     db.add(new_post)
@@ -77,6 +82,7 @@ async def create_post(
         id=new_post.id,
         content=new_post.content,
         media_url=new_post.media_url,
+        privacy=new_post.privacy or "public",
         likes_count=new_post.likes_count,
         created_at=new_post.created_at,
         author=UserResponse.model_validate(current_user)
@@ -115,6 +121,7 @@ async def get_user_posts(
             id=p.id,
             content=p.content,
             media_url=p.media_url,
+            privacy=getattr(p, 'privacy', 'public') or 'public',
             likes_count=p.likes_count,
             created_at=p.created_at,
             author=UserResponse.model_validate(author)

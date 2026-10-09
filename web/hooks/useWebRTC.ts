@@ -20,16 +20,20 @@ export function useWebRTC(onSignal: (type: string, payload: any) => void) {
   const pcRef = useRef<RTCPeerConnection | null>(null);
   const localStreamRef = useRef<MediaStream | null>(null);
   const pendingCandidatesRef = useRef<RTCIceCandidateInit[]>([]);
+  const pendingOfferRef = useRef<RTCSessionDescriptionInit | null>(null);
 
   const createPeerConnection = useCallback(() => {
-    if (pcRef.current) return pcRef.current;
+    // If existing and not closed, reuse
+    if (pcRef.current && pcRef.current.signalingState !== 'closed') {
+      return pcRef.current;
+    }
 
     const pc = new RTCPeerConnection(ICE_SERVERS);
     pcRef.current = pc;
 
     pc.onicecandidate = (event) => {
       if (event.candidate) {
-        onSignal('ice_candidate', event.candidate);
+        onSignal('ice_candidate', event.candidate.toJSON());
       }
     };
 
@@ -39,13 +43,13 @@ export function useWebRTC(onSignal: (type: string, payload: any) => void) {
       }
     };
 
-    // Attach existing local tracks if available
+    // Attach local stream tracks if already captured
     if (localStreamRef.current) {
       localStreamRef.current.getTracks().forEach((track) => {
         try {
           pc.addTrack(track, localStreamRef.current!);
         } catch (e) {
-          console.warn('Could not add track:', e);
+          console.warn('Could not attach existing track to PC:', e);
         }
       });
     }
@@ -60,15 +64,17 @@ export function useWebRTC(onSignal: (type: string, payload: any) => void) {
         try {
           await pc.addIceCandidate(new RTCIceCandidate(candidate));
         } catch (err) {
-          console.error('Error flushing ICE candidate:', err);
+          console.warn('Flushing candidate warning:', err);
         }
       }
     }
   };
 
   const startLocalMedia = async (video: boolean = true) => {
-    if (typeof window === 'undefined' || !navigator.mediaDevices?.getUserMedia) {
-      console.warn('Media devices API not available (requires HTTPS or localhost)');
+    if (typeof window === 'undefined') return null;
+
+    if (!navigator.mediaDevices?.getUserMedia) {
+      console.warn('Media devices API not available');
       return null;
     }
 
@@ -80,12 +86,16 @@ export function useWebRTC(onSignal: (type: string, payload: any) => void) {
       localStreamRef.current = stream;
       setLocalStream(stream);
 
-      // If peer connection already initialized, add tracks to it
-      if (pcRef.current) {
+      // If peer connection exists, add tracks to it
+      if (pcRef.current && pcRef.current.signalingState !== 'closed') {
         const senders = pcRef.current.getSenders();
         stream.getTracks().forEach((track) => {
           if (!senders.some(s => s.track === track)) {
-            pcRef.current!.addTrack(track, stream);
+            try {
+              pcRef.current!.addTrack(track, stream);
+            } catch (e) {
+              console.warn('Could not add track:', e);
+            }
           }
         });
       }
@@ -97,11 +107,15 @@ export function useWebRTC(onSignal: (type: string, payload: any) => void) {
         localStreamRef.current = audioStream;
         setLocalStream(audioStream);
 
-        if (pcRef.current) {
+        if (pcRef.current && pcRef.current.signalingState !== 'closed') {
           const senders = pcRef.current.getSenders();
           audioStream.getTracks().forEach((track) => {
             if (!senders.some(s => s.track === track)) {
-              pcRef.current!.addTrack(track, audioStream);
+              try {
+                pcRef.current!.addTrack(track, audioStream);
+              } catch (e) {
+                console.warn('Could not add audio track:', e);
+              }
             }
           });
         }
@@ -114,38 +128,104 @@ export function useWebRTC(onSignal: (type: string, payload: any) => void) {
   };
 
   const createOffer = async () => {
-    const pc = createPeerConnection();
-    const offer = await pc.createOffer();
-    await pc.setLocalDescription(offer);
-    onSignal('webrtc_offer', offer);
+    try {
+      const pc = createPeerConnection();
+      const offer = await pc.createOffer({
+        offerToReceiveAudio: true,
+        offerToReceiveVideo: true,
+      });
+      await pc.setLocalDescription(offer);
+      onSignal('webrtc_offer', offer);
+      return offer;
+    } catch (err) {
+      console.error('Error creating offer:', err);
+      return null;
+    }
   };
 
+  // Called when receiving an offer from remote caller
   const handleOffer = async (offer: RTCSessionDescriptionInit) => {
+    pendingOfferRef.current = offer;
     const pc = createPeerConnection();
-    await pc.setRemoteDescription(new RTCSessionDescription(offer));
-    await drainPendingCandidates(pc);
 
-    const answer = await pc.createAnswer();
-    await pc.setLocalDescription(answer);
-    onSignal('webrtc_answer', answer);
+    try {
+      // Check if we need to rollback local offer in case of collision
+      if (pc.signalingState === 'have-local-offer') {
+        try {
+          await pc.setLocalDescription({ type: 'rollback' });
+        } catch (e) {
+          console.warn('Rollback failed:', e);
+        }
+      }
+
+      // Only setRemoteDescription if state allows
+      if ((pc.signalingState as string) === 'stable') {
+        await pc.setRemoteDescription(new RTCSessionDescription(offer));
+        await drainPendingCandidates(pc);
+
+        // Guard: only create and set local answer if we are in have-remote-offer
+        if ((pc.signalingState as string) === 'have-remote-offer') {
+          const answer = await pc.createAnswer();
+          if ((pc.signalingState as string) === 'have-remote-offer') {
+            await pc.setLocalDescription(answer);
+            onSignal('webrtc_answer', answer);
+          }
+        }
+      }
+    } catch (err) {
+      console.error('Error handling offer:', err);
+    }
+  };
+
+  // Called when receiver accepts call and wants to generate/send answer
+  const answerCall = async (incomingOffer?: RTCSessionDescriptionInit) => {
+    const offer = incomingOffer || pendingOfferRef.current;
+    if (!offer) {
+      console.warn('No offer available to answer');
+      return;
+    }
+
+    const pc = createPeerConnection();
+    try {
+      if ((pc.signalingState as string) === 'stable') {
+        await pc.setRemoteDescription(new RTCSessionDescription(offer));
+        await drainPendingCandidates(pc);
+      }
+
+      if ((pc.signalingState as string) === 'have-remote-offer') {
+        const answer = await pc.createAnswer();
+        if ((pc.signalingState as string) === 'have-remote-offer') {
+          await pc.setLocalDescription(answer);
+          onSignal('webrtc_answer', answer);
+        }
+      }
+    } catch (err) {
+      console.error('Error creating answer:', err);
+    }
   };
 
   const handleAnswer = async (answer: RTCSessionDescriptionInit) => {
-    if (pcRef.current) {
-      await pcRef.current.setRemoteDescription(new RTCSessionDescription(answer));
-      await drainPendingCandidates(pcRef.current);
+    if (pcRef.current && pcRef.current.signalingState === 'have-local-offer') {
+      try {
+        await pcRef.current.setRemoteDescription(new RTCSessionDescription(answer));
+        await drainPendingCandidates(pcRef.current);
+      } catch (err) {
+        console.error('Error setting remote answer:', err);
+      }
+    } else {
+      console.log('Skipping setRemoteDescription for answer, signalingState:', pcRef.current?.signalingState);
     }
   };
 
   const handleIceCandidate = async (candidate: RTCIceCandidateInit) => {
-    if (pcRef.current && pcRef.current.remoteDescription) {
+    if (!candidate) return;
+    if (pcRef.current && pcRef.current.remoteDescription && pcRef.current.signalingState !== 'closed') {
       try {
         await pcRef.current.addIceCandidate(new RTCIceCandidate(candidate));
       } catch (e) {
-        console.error('Error adding ICE candidate:', e);
+        console.warn('Error adding ICE candidate:', e);
       }
     } else {
-      // Buffer until remote description is set
       pendingCandidatesRef.current.push(candidate);
     }
   };
@@ -180,7 +260,7 @@ export function useWebRTC(onSignal: (type: string, payload: any) => void) {
         const screenStream = await navigator.mediaDevices.getDisplayMedia({ video: true });
         const screenTrack = screenStream.getVideoTracks()[0];
         
-        if (pcRef.current) {
+        if (pcRef.current && pcRef.current.signalingState !== 'closed') {
           const sender = pcRef.current.getSenders().find((s) => s.track?.kind === 'video');
           if (sender) {
             sender.replaceTrack(screenTrack);
@@ -201,7 +281,7 @@ export function useWebRTC(onSignal: (type: string, payload: any) => void) {
   };
 
   const stopScreenShare = () => {
-    if (localStreamRef.current && pcRef.current) {
+    if (localStreamRef.current && pcRef.current && pcRef.current.signalingState !== 'closed') {
       const cameraTrack = localStreamRef.current.getVideoTracks()[0];
       const sender = pcRef.current.getSenders().find((s) => s.track?.kind === 'video');
       if (sender && cameraTrack) {
@@ -213,13 +293,16 @@ export function useWebRTC(onSignal: (type: string, payload: any) => void) {
 
   const stopAllMedia = () => {
     pendingCandidatesRef.current = [];
+    pendingOfferRef.current = null;
     if (localStreamRef.current) {
       localStreamRef.current.getTracks().forEach((track) => track.stop());
       localStreamRef.current = null;
       setLocalStream(null);
     }
     if (pcRef.current) {
-      pcRef.current.close();
+      try {
+        pcRef.current.close();
+      } catch (e) {}
       pcRef.current = null;
     }
     setRemoteStream(null);
@@ -237,6 +320,7 @@ export function useWebRTC(onSignal: (type: string, payload: any) => void) {
     startLocalMedia,
     createOffer,
     handleOffer,
+    answerCall,
     handleAnswer,
     handleIceCandidate,
     toggleMute,

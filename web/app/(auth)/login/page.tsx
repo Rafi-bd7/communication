@@ -3,9 +3,10 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { MessageSquare, Lock, User as UserIcon, Sparkles, Languages } from 'lucide-react';
+import { Lock, User as UserIcon, Languages, KeyRound, X, CheckCircle, Phone } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useLanguage } from '@/lib/i18n';
+import { api } from '@/lib/api';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -15,6 +16,16 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+
+  // Forgot / Reset Password Modal State
+  const [showForgotModal, setShowForgotModal] = useState(false);
+  const [resetIdentifier, setResetIdentifier] = useState('');
+  const [resetPhone, setResetPhone] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [resetError, setResetError] = useState('');
+  const [resetSuccess, setResetSuccess] = useState('');
+  const [isResetting, setIsResetting] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -31,16 +42,44 @@ export default function LoginPage() {
     }
   };
 
-  const handleQuickDemo = async (userKey: string) => {
-    setError('');
-    setIsLoading(true);
+  const handleResetPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setResetError('');
+    setResetSuccess('');
+
+    if (newPassword.length < 6) {
+      setResetError(lang === 'bn' ? 'পাসওয়ার্ড কমপক্ষে ৬ অক্ষরের হতে হবে।' : 'New password must be at least 6 characters.');
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      setResetError(lang === 'bn' ? 'দুইটি পাসওয়ার্ড মিলছে না!' : 'Passwords do not match.');
+      return;
+    }
+
+    setIsResetting(true);
     try {
-      await login({ username_or_email: userKey, password: 'password123' });
-      router.push('/chat');
+      await api.resetPassword({
+        username_or_email: resetIdentifier,
+        new_password: newPassword,
+        phone: resetPhone || undefined,
+      });
+
+      setResetSuccess(
+        lang === 'bn' 
+          ? 'পাসওয়ার্ড সফলভাবে পরিবর্তন করা হয়েছে! এখন নতুন পাসওয়ার্ড দিয়ে লগইন করুন।' 
+          : 'Password reset successfully! You can now log in with your new password.'
+      );
+      setUsernameOrEmail(resetIdentifier);
+      setPassword('');
+      setTimeout(() => {
+        setShowForgotModal(false);
+        setResetSuccess('');
+      }, 2500);
     } catch (err: any) {
-      setError(err.message || 'Demo login failed');
+      setResetError(err.message || (lang === 'bn' ? 'পাসওয়ার্ড রিসেট ব্যর্থ হয়েছে।' : 'Password reset failed.'));
     } finally {
-      setIsLoading(false);
+      setIsResetting(false);
     }
   };
 
@@ -97,7 +136,21 @@ export default function LoginPage() {
           </div>
 
           <div>
-            <label className="text-xs font-semibold text-gray-300 block mb-1.5">{t.password}</label>
+            <div className="flex items-center justify-between mb-1.5">
+              <label className="text-xs font-semibold text-gray-300">{t.password}</label>
+              <button
+                type="button"
+                onClick={() => {
+                  setResetIdentifier(usernameOrEmail);
+                  setResetError('');
+                  setResetSuccess('');
+                  setShowForgotModal(true);
+                }}
+                className="text-[11px] font-semibold text-brand-emerald hover:underline"
+              >
+                {lang === 'bn' ? 'পাসওয়ার্ড ভুলে গেছেন?' : 'Forgot Password?'}
+              </button>
+            </div>
             <div className="relative">
               <Lock className="w-4 h-4 text-gray-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
               <input
@@ -133,6 +186,133 @@ export default function LoginPage() {
           Adda • {t.brandTagline}
         </p>
       </div>
+
+      {/* Forgot / Reset Password Modal */}
+      {showForgotModal && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-[#111b21] border border-brand-border rounded-3xl w-full max-w-md p-6 shadow-2xl text-white animate-fade-in relative">
+            <div className="flex items-center justify-between pb-3 border-b border-[#2a3942] mb-4">
+              <div className="flex items-center gap-2">
+                <KeyRound className="w-5 h-5 text-brand-emerald" />
+                <h3 className="font-bold text-base">
+                  {lang === 'bn' ? 'পাসওয়ার্ড রিসেট করুন' : 'Reset Password'}
+                </h3>
+              </div>
+              <button
+                onClick={() => setShowForgotModal(false)}
+                className="p-1 rounded-xl text-gray-400 hover:text-white hover:bg-white/10"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {resetSuccess ? (
+              <div className="py-6 flex flex-col items-center text-center gap-3">
+                <CheckCircle className="w-12 h-12 text-brand-emerald animate-bounce" />
+                <p className="text-sm font-semibold text-emerald-400">{resetSuccess}</p>
+              </div>
+            ) : (
+              <form onSubmit={handleResetPassword} className="flex flex-col gap-3.5 text-xs">
+                <p className="text-gray-400 leading-relaxed text-[11px]">
+                  {lang === 'bn' 
+                    ? 'আপনার অ্যাকাউন্টের ইউজারনেম বা ইমেইল এবং নতুন পাসওয়ার্ড লিখে রিসেট করুন।' 
+                    : 'Enter your registered username or email, and set your new password.'}
+                </p>
+
+                {resetError && (
+                  <div className="p-2.5 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 font-medium text-center">
+                    {resetError}
+                  </div>
+                )}
+
+                <div>
+                  <label className="text-gray-300 font-semibold block mb-1">
+                    {lang === 'bn' ? 'ইউজারনেম বা ইমেইল *' : 'Username or Email *'}
+                  </label>
+                  <div className="relative">
+                    <UserIcon className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                    <input
+                      type="text"
+                      value={resetIdentifier}
+                      onChange={(e) => setResetIdentifier(e.target.value)}
+                      required
+                      placeholder={lang === 'bn' ? 'যেমন: user123 বা user@mail.com' : 'e.g. user123 or user@mail.com'}
+                      className="w-full bg-[#202c33] text-white text-xs rounded-xl pl-9 pr-3 py-2.5 border border-brand-border focus:outline-none focus:border-brand-emerald"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-gray-300 font-semibold block mb-1">
+                    {lang === 'bn' ? 'ফোন নম্বর (ঐচ্ছিক)' : 'Phone Number (Optional)'}
+                  </label>
+                  <div className="relative">
+                    <Phone className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                    <input
+                      type="text"
+                      value={resetPhone}
+                      onChange={(e) => setResetPhone(e.target.value)}
+                      placeholder="+8801..."
+                      className="w-full bg-[#202c33] text-white text-xs rounded-xl pl-9 pr-3 py-2.5 border border-brand-border focus:outline-none focus:border-brand-emerald"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-gray-300 font-semibold block mb-1">
+                    {lang === 'bn' ? 'নতুন পাসওয়ার্ড (কমপক্ষে ৬ অক্ষর) *' : 'New Password (min 6 chars) *'}
+                  </label>
+                  <div className="relative">
+                    <Lock className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                    <input
+                      type="password"
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                      required
+                      placeholder="••••••••"
+                      className="w-full bg-[#202c33] text-white text-xs rounded-xl pl-9 pr-3 py-2.5 border border-brand-border focus:outline-none focus:border-brand-emerald"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-gray-300 font-semibold block mb-1">
+                    {lang === 'bn' ? 'নতুন পাসওয়ার্ড নিশ্চিত করুন *' : 'Confirm New Password *'}
+                  </label>
+                  <div className="relative">
+                    <Lock className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                    <input
+                      type="password"
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      required
+                      placeholder="••••••••"
+                      className="w-full bg-[#202c33] text-white text-xs rounded-xl pl-9 pr-3 py-2.5 border border-brand-border focus:outline-none focus:border-brand-emerald"
+                    />
+                  </div>
+                </div>
+
+                <div className="mt-2 flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setShowForgotModal(false)}
+                    className="flex-1 py-2.5 rounded-xl border border-brand-border bg-[#202c33] hover:bg-[#2a3942] text-gray-300 font-bold"
+                  >
+                    {lang === 'bn' ? 'বাতিল' : 'Cancel'}
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={isResetting}
+                    className="flex-1 py-2.5 rounded-xl bg-brand-emerald hover:brightness-110 text-brand-dark font-bold shadow-md shadow-brand-emerald/20 transition-all active:scale-95 disabled:opacity-50"
+                  >
+                    {isResetting ? (lang === 'bn' ? 'রিসেট হচ্ছে...' : 'Resetting...') : (lang === 'bn' ? 'পাসওয়ার্ড রিসেট করুন' : 'Confirm Reset')}
+                  </button>
+                </div>
+              </form>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

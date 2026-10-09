@@ -18,7 +18,7 @@ import { StatusViewerModal } from '@/components/status/StatusViewerModal';
 import { CreateStatusModal } from '@/components/status/CreateStatusModal';
 import { CallsHistoryView } from '@/components/calls/CallsHistoryView';
 import { CallModal } from '@/components/calls/CallModal';
-import { AIAssistantDrawer } from '@/components/ai/AIAssistantDrawer';
+// AI features removed
 import { AdminDashboard } from '@/components/admin/AdminDashboard';
 import { SettingsModal } from '@/components/settings/SettingsModal';
 import { DeviceConnectModal } from '@/components/layout/DeviceConnectModal';
@@ -32,16 +32,16 @@ import { TimelineFeedDrawer } from '@/components/social/TimelineFeedDrawer';
 // Adda Unique Components
 import { AddabariDashboard } from '@/components/adda/AddabariDashboard';
 import { QuickAddaModal } from '@/components/adda/QuickAddaModal';
-import { SharedBoardDrawer } from '@/components/adda/SharedBoardDrawer';
 import { MessageCollectionsModal, SavedMessageItem } from '@/components/adda/MessageCollectionsModal';
+import { UserHomePage } from '@/components/home/UserHomePage';
 
 export default function ChatPage() {
   const router = useRouter();
   const { user, isLoading: authLoading } = useAuth();
   const { t, lang } = useLanguage();
 
-  // Navigation tabs: 'chats' | 'addabari' | 'status' | 'calls' | 'admin'
-  const [activeTab, setActiveTab] = useState('chats');
+  // Navigation tabs: 'home' | 'chats' | 'calls' | 'status'
+  const [activeTab, setActiveTab] = useState('home');
 
   // Chats & Messages
   const [conversations, setConversations] = useState<ConversationItem[]>([]);
@@ -54,12 +54,10 @@ export default function ChatPage() {
   const [activeStoryViewer, setActiveStoryViewer] = useState<StatusItem | null>(null);
   const [showCreateStatusModal, setShowCreateStatusModal] = useState(false);
 
-  // Adda Modals & Drawers
-  const [isAIOpen, setIsAIOpen] = useState(false);
+  // Modals & Drawers
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isDeviceConnectOpen, setIsDeviceConnectOpen] = useState(false);
   const [isQuickAddaOpen, setIsQuickAddaOpen] = useState(false);
-  const [isSharedBoardOpen, setIsSharedBoardOpen] = useState(false);
   const [isCollectionsOpen, setIsCollectionsOpen] = useState(false);
 
   // Social: Facebook Profile, Discover People & Timeline Feed
@@ -103,6 +101,14 @@ export default function ChatPage() {
         setSavedMessages(JSON.parse(stored));
       }
     } catch (e) {}
+  }, []);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined' && 'Notification' in window) {
+      if (Notification.permission === 'default') {
+        Notification.requestPermission().catch(() => {});
+      }
+    }
   }, []);
 
   const handleSaveToCollections = (msg: MessageItem) => {
@@ -196,6 +202,7 @@ export default function ChatPage() {
     startLocalMedia,
     createOffer,
     handleOffer,
+    answerCall,
     handleAnswer,
     handleIceCandidate,
     toggleMute,
@@ -275,10 +282,35 @@ export default function ChatPage() {
   const handleIncomingCallEvent = useCallback((callData: any) => {
     soundFX.startRingtone();
     setIncomingCall(callData);
-    callTargetRef.current = { targetId: callData.caller_id, callId: callData.call_id };
+    const callerId = callData.caller?.id || callData.caller_id || callData.sender_id;
+    const callerName = callData.caller?.full_name || 'Adda Contact';
+    callTargetRef.current = { targetId: callerId, callId: callData.call_id };
+
+    // Trigger Native Notification on Mobile / Desktop
+    if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
+      try {
+        new Notification(`📞 ${callerName}`, {
+          body: `${callData.call_type === 'video' ? 'ভিডিও কল' : 'ভয়েস কল'} আসছে... রিসিভ করতে ট্যাপ করুন`,
+          icon: callData.caller?.avatar_url || '/icons/icon-192.png',
+          tag: 'adda-incoming-call',
+        });
+      } catch (e) {}
+    }
   }, []);
 
-  const handleCallSignalReceived = useCallback(async (signalType: string, payload: any) => {
+  const handleRemoteCallEnded = useCallback((data?: any) => {
+    soundFX.stopRingtone();
+    setActiveCall(null);
+    setIncomingCall(null);
+    callTargetRef.current = null;
+    stopAllMedia();
+  }, [stopAllMedia]);
+
+  const handleCallSignalReceived = useCallback(async (signalType: string, payload: any, senderId?: string) => {
+    if (senderId && (!callTargetRef.current?.targetId || callTargetRef.current.targetId === 'undefined')) {
+      callTargetRef.current = { ...callTargetRef.current, targetId: senderId };
+    }
+
     if (signalType === 'webrtc_offer') {
       await handleOffer(payload);
     } else if (signalType === 'webrtc_answer') {
@@ -310,10 +342,15 @@ export default function ChatPage() {
       }
     },
     onCallSignal: (data) => {
-      if (data.type === 'incoming_call') {
+      const isIncoming = data.type === 'incoming_call' || data.event === 'incoming_call';
+      const isCallEnded = data.type === 'call_end' || data.type === 'call_reject' || data.event === 'call_ended';
+
+      if (isIncoming) {
         handleIncomingCallEvent(data);
+      } else if (isCallEnded) {
+        handleRemoteCallEnded(data);
       } else {
-        handleCallSignalReceived(data.type, data.payload);
+        handleCallSignalReceived(data.type, data.payload, data.sender_id);
       }
     },
   });
@@ -431,37 +468,69 @@ export default function ChatPage() {
   const handleAcceptCall = async () => {
     if (!incomingCall) return;
     soundFX.stopRingtone();
-    try {
-      await api.updateCallStatus(incomingCall.call_id, 'accepted');
-      setActiveCall({
-        call_id: incomingCall.call_id,
-        call_type: incomingCall.call_type,
-        targetUser: incomingCall.caller,
-      });
-      setIncomingCall(null);
-      await startLocalMedia(incomingCall.call_type === 'video');
-    } catch (err) {
-      alert('Failed to accept call');
+    const callerUser = incomingCall.caller;
+    const callId = incomingCall.call_id;
+    const callType = incomingCall.call_type;
+    const callerId = callerUser?.id || incomingCall.caller_id || incomingCall.sender_id;
+
+    callTargetRef.current = { targetId: callerId, callId: callId };
+    setActiveCall({
+      call_id: callId,
+      call_type: callType,
+      targetUser: callerUser,
+    });
+    setIncomingCall(null);
+
+    // Notify caller that call was accepted
+    if (callerId && sendCallSignalRef.current) {
+      sendCallSignalRef.current('call_accept', callerId, {}, callId);
     }
+
+    try {
+      await api.updateCallStatus(callId, 'accepted');
+    } catch (e) {}
+
+    // Start local media first
+    await startLocalMedia(callType === 'video');
+
+    // Create and send WebRTC answer
+    await answerCall();
   };
 
   const handleDeclineCall = async () => {
     if (!incomingCall) return;
     soundFX.stopRingtone();
+    const callerId = incomingCall.caller?.id || incomingCall.caller_id || incomingCall.sender_id;
+    const callId = incomingCall.call_id;
+
+    if (callerId && sendCallSignalRef.current) {
+      sendCallSignalRef.current('call_reject', callerId, {}, callId);
+    }
+
     try {
-      await api.updateCallStatus(incomingCall.call_id, 'declined');
-      setIncomingCall(null);
-      callTargetRef.current = null;
+      await api.updateCallStatus(callId, 'declined');
     } catch (err) {}
+
+    setIncomingCall(null);
+    callTargetRef.current = null;
+    stopAllMedia();
   };
 
   const handleEndCall = async () => {
     soundFX.stopRingtone();
-    if (activeCall) {
+    const targetId = callTargetRef.current?.targetId || activeCall?.targetUser?.id;
+    const callId = activeCall?.call_id || incomingCall?.call_id;
+
+    if (targetId && sendCallSignalRef.current) {
+      sendCallSignalRef.current('call_end', targetId, {}, callId);
+    }
+
+    if (callId) {
       try {
-        await api.updateCallStatus(activeCall.call_id, 'ended');
+        await api.updateCallStatus(callId, 'ended');
       } catch (err) {}
     }
+
     stopAllMedia();
     setActiveCall(null);
     setIncomingCall(null);
@@ -480,7 +549,6 @@ export default function ChatPage() {
             setActiveTab(tab);
           }
         }}
-        openAI={() => setIsAIOpen(true)}
         openSettings={() => setIsSettingsOpen(true)}
         openDeviceConnect={() => setIsDeviceConnectOpen(true)}
         openDiscoverPeople={() => setIsDiscoverPeopleOpen(true)}
@@ -495,6 +563,19 @@ export default function ChatPage() {
 
       {/* 2. Main Content Area */}
       <main className="flex-1 flex h-full overflow-hidden relative">
+        {/* Tab 0: Home Hub (Facebook Feed + Messenger Online Contacts + WhatsApp Stories) */}
+        {activeTab === 'home' && (
+          <UserHomePage
+            statuses={statuses}
+            onOpenCreateStory={() => setShowCreateStatusModal(true)}
+            onOpenStoryViewer={(st) => setActiveStoryViewer(st)}
+            onStartChat={handleStartDirectChat}
+            onStartCall={(target, type) => handleStartCall(type, target)}
+            onOpenDiscoverPeople={() => setIsDiscoverPeopleOpen(true)}
+            onOpenQuickAdda={() => setIsQuickAddaOpen(true)}
+          />
+        )}
+
         {/* Tab 1: Chats */}
         {activeTab === 'chats' && (
           <div className="flex-1 flex h-full overflow-hidden">
@@ -533,10 +614,7 @@ export default function ChatPage() {
                 onDeleteMessage={handleDeleteMessage}
                 onReactMessage={handleReactMessage}
                 onStartCall={(type) => handleStartCall(type)}
-                onOpenAI={() => setIsAIOpen(true)}
                 onTyping={handleTypingEvent}
-                onOpenSharedBoard={() => setIsSharedBoardOpen(true)}
-                onBookmarkMessage={handleSaveToCollections}
                 onOpenProfile={handleOpenUserProfile}
               />
             ) : (
@@ -562,12 +640,6 @@ export default function ChatPage() {
                     className="px-5 py-2.5 rounded-2xl bg-brand-emerald text-brand-dark font-bold text-xs hover:brightness-110 shadow-lg shadow-brand-emerald/20 transition-all active:scale-95"
                   >
                     ⚡ {t.quickAddaBtn}
-                  </button>
-                  <button
-                    onClick={() => setActiveTab('addabari')}
-                    className="px-4 py-2.5 rounded-2xl bg-[#202c33] hover:bg-[#2a3942] text-white font-semibold text-xs border border-brand-border transition-colors"
-                  >
-                    🏠 {t.addabariTitle}
                   </button>
                 </div>
               </div>
@@ -647,21 +719,6 @@ export default function ChatPage() {
         }}
       />
 
-      {/* Shared Board Drawer */}
-      <SharedBoardDrawer
-        isOpen={isSharedBoardOpen}
-        onClose={() => setIsSharedBoardOpen(false)}
-        roomTitle={activeConversation?.name || 'Adda Room'}
-      />
-
-      {/* Message Collections Modal */}
-      <MessageCollectionsModal
-        isOpen={isCollectionsOpen}
-        onClose={() => setIsCollectionsOpen(false)}
-        savedMessages={savedMessages}
-        onRemoveMessage={handleRemoveFromCollections}
-      />
-
       {/* Story Viewer Modal */}
       <StatusViewerModal
         status={activeStoryViewer}
@@ -673,13 +730,6 @@ export default function ChatPage() {
         isOpen={showCreateStatusModal}
         onClose={() => setShowCreateStatusModal(false)}
         onCreated={loadStatuses}
-      />
-
-      {/* AI Assistant Drawer */}
-      <AIAssistantDrawer
-        isOpen={isAIOpen}
-        onClose={() => setIsAIOpen(false)}
-        activeConversationId={activeConversation?.id}
       />
 
       {/* Settings Modal */}
@@ -717,6 +767,14 @@ export default function ChatPage() {
         onClose={() => setIsTimelineFeedOpen(false)}
         onViewProfile={handleOpenUserProfile}
         onStartChat={handleStartDirectChat}
+      />
+
+      {/* Saved Collections Modal */}
+      <MessageCollectionsModal
+        isOpen={isCollectionsOpen}
+        onClose={() => setIsCollectionsOpen(false)}
+        savedMessages={savedMessages}
+        onRemoveMessage={handleRemoveFromCollections}
       />
     </div>
   );

@@ -219,44 +219,24 @@ export function ChatList({
         </div>
 
         <div className="flex items-center gap-1.5">
-          {/* Quick Adda Button */}
-          {onOpenQuickAdda && (
-            <button
-              type="button"
-              onClick={onOpenQuickAdda}
-              title={t.quickAddaTitle}
-              className="p-2 rounded-xl text-brand-dark bg-brand-emerald hover:brightness-110 transition-transform active:scale-95 shadow-sm shadow-brand-emerald/20 font-bold"
-            >
-              <Zap className="w-4 h-4 fill-current" />
-            </button>
-          )}
-
-          <button
-            type="button"
-            onClick={openNewGroup}
-            title={lang === 'bn' ? 'নতুন গ্রুপ / আড্ডা রুম' : 'New Group Chat'}
-            className="p-2 rounded-xl text-gray-400 hover:text-white hover:bg-[#202c33] transition-colors"
-          >
-            <Users className="w-4 h-4" />
-          </button>
-
           {/* Discover People & Add Friends */}
           {onOpenDiscoverPeople && (
             <button
               type="button"
               onClick={onOpenDiscoverPeople}
-              title={lang === 'bn' ? '👥 মানুষ খুঁজুন ও ফ্রেন্ড রিকোয়েস্ট পাঠান' : '👥 Discover People & Add Friends'}
-              className="p-2 rounded-xl text-sky-400 bg-sky-500/10 hover:bg-sky-500/20 transition-colors"
+              title={lang === 'bn' ? '👥 মানুষ খুঁজুন ও ফ্রেন্ড রিকোয়েস্ট পাঠান' : '👥 Discover People & Friends'}
+              className="p-2 rounded-xl text-sky-400 bg-sky-500/10 hover:bg-sky-500/20 transition-all active:scale-95 flex items-center gap-1"
             >
               <UserPlus className="w-4 h-4" />
             </button>
           )}
 
+          {/* New 1-to-1 Chat */}
           <button
             type="button"
             onClick={openNewChat}
-            title={lang === 'bn' ? 'নতুন ১-অন-১ আড্ডা' : 'New 1-to-1 Chat'}
-            className="p-2 rounded-xl text-brand-emerald bg-brand-emerald/10 hover:bg-brand-emerald/20 transition-colors"
+            title={lang === 'bn' ? 'নতুন ১-অন-১ মেসেজ' : 'New 1-on-1 Chat'}
+            className="p-2 rounded-xl text-brand-emerald bg-brand-emerald/10 hover:bg-brand-emerald/20 transition-all active:scale-95"
           >
             <MessageSquarePlus className="w-4 h-4" />
           </button>

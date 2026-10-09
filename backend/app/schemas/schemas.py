@@ -16,6 +16,11 @@ class UserLogin(BaseModel):
     username_or_email: str
     password: str
 
+class PasswordResetRequest(BaseModel):
+    username_or_email: str
+    new_password: str
+    phone: Optional[str] = None
+
 class UserUpdate(BaseModel):
     full_name: Optional[str] = None
     bio: Optional[str] = None
