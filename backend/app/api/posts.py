@@ -2,12 +2,12 @@ from typing import List, Optional
 from datetime import datetime
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
+from sqlalchemy import select, and_, or_
 from pydantic import BaseModel
 
 from app.core.database import get_db
 from app.core.security import get_current_user
-from app.models.models import User, Post
+from app.models.models import User, Post, Friendship
 from app.schemas.schemas import UserResponse
 
 router = APIRouter(prefix="/posts", tags=["posts"])
@@ -36,24 +36,45 @@ async def get_timeline_feed(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    """Get global / friends timeline feed"""
-    stmt = select(Post).order_by(Post.created_at.desc()).offset(skip).limit(limit)
+    """Get global / friends timeline feed with privacy check"""
+    # Fetch friends of current user
+    f_stmt = select(Friendship).where(
+        and_(
+            Friendship.status == "accepted",
+            or_(Friendship.requester_id == current_user.id, Friendship.receiver_id == current_user.id)
+        )
+    )
+    f_res = await db.execute(f_stmt)
+    friendships = f_res.scalars().all()
+    friend_ids = {
+        f.receiver_id if f.requester_id == current_user.id else f.requester_id
+        for f in friendships
+    }
+    friend_ids.add(current_user.id)
+
+    stmt = select(Post).order_by(Post.created_at.desc()).offset(skip).limit(limit * 2)
     res = await db.execute(stmt)
     posts = res.scalars().all()
 
     response = []
     for p in posts:
+        post_privacy = getattr(p, 'privacy', 'public') or 'public'
+        if post_privacy == 'friends' and p.user_id not in friend_ids:
+            continue
+
         author = await db.get(User, p.user_id)
         if author:
             response.append(PostResponse(
                 id=p.id,
                 content=p.content,
                 media_url=p.media_url,
-                privacy=getattr(p, 'privacy', 'public') or 'public',
+                privacy=post_privacy,
                 likes_count=p.likes_count,
                 created_at=p.created_at,
                 author=UserResponse.model_validate(author)
             ))
+            if len(response) >= limit:
+                break
     return response
 
 @router.post("", response_model=PostResponse)
@@ -112,7 +133,26 @@ async def get_user_posts(
     if not author:
         raise HTTPException(status_code=404, detail="User not found")
 
-    stmt = select(Post).where(Post.user_id == user_id).order_by(Post.created_at.desc()).limit(20)
+    is_self = (user_id == current_user.id)
+    is_friend = False
+    if not is_self:
+        f_stmt = select(Friendship).where(
+            and_(
+                Friendship.status == "accepted",
+                or_(
+                    and_(Friendship.requester_id == current_user.id, Friendship.receiver_id == user_id),
+                    and_(Friendship.requester_id == user_id, Friendship.receiver_id == current_user.id)
+                )
+            )
+        )
+        f_res = await db.execute(f_stmt)
+        is_friend = f_res.scalar_one_or_none() is not None
+
+    if is_self or is_friend:
+        stmt = select(Post).where(Post.user_id == user_id).order_by(Post.created_at.desc()).limit(30)
+    else:
+        stmt = select(Post).where(and_(Post.user_id == user_id, Post.privacy == "public")).order_by(Post.created_at.desc()).limit(30)
+
     res = await db.execute(stmt)
     posts = res.scalars().all()
 

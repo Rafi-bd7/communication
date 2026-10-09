@@ -59,6 +59,7 @@ export const api = {
   // Users
   listUsers: () => request('/users'),
   searchUsers: (q: string) => request(`/users/search?q=${encodeURIComponent(q)}`),
+  getUserProfile: (userId: string) => request(`/users/${userId}`),
   updateProfile: (data: any) => request('/users/profile', { method: 'PUT', body: JSON.stringify(data) }),
 
   // Conversations
@@ -169,6 +170,8 @@ export const api = {
   declineFriendRequest: (friendshipId: string) => request(`/friends/decline/${friendshipId}`, { method: 'POST' }),
   getMyFriends: () => request('/friends/my-friends'),
   getPendingRequests: () => request('/friends/requests'),
+  getFriendshipStatus: (userId: string) => request(`/friends/status/${userId}`),
+  unfriendUser: (userId: string) => request(`/friends/unfriend/${userId}`, { method: 'POST' }),
 
   // Timeline Posts (Facebook Features)
   getTimelineFeed: () => request('/posts/feed'),

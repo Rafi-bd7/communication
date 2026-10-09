@@ -185,6 +185,56 @@ async def decline_friend_request(
     await db.commit()
     return {"message": "Friend request declined", "status": "none"}
 
+@router.get("/status/{target_user_id}")
+async def get_friendship_status(
+    target_user_id: str,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Check friendship status between current user and target user"""
+    if target_user_id == current_user.id:
+        return {"status": "self", "friendship_id": None}
+
+    existing = await db.execute(
+        select(Friendship).where(
+            or_(
+                and_(Friendship.requester_id == current_user.id, Friendship.receiver_id == target_user_id),
+                and_(Friendship.requester_id == target_user_id, Friendship.receiver_id == current_user.id)
+            )
+        )
+    )
+    rel = existing.scalar_one_or_none()
+    if not rel:
+        return {"status": "none", "friendship_id": None}
+    if rel.status == "accepted":
+        return {"status": "friends", "friendship_id": rel.id}
+    elif rel.requester_id == current_user.id:
+        return {"status": "pending_sent", "friendship_id": rel.id}
+    else:
+        return {"status": "pending_received", "friendship_id": rel.id}
+
+@router.post("/unfriend/{target_user_id}")
+async def unfriend_user(
+    target_user_id: str,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Remove friendship between current user and target user"""
+    existing = await db.execute(
+        select(Friendship).where(
+            or_(
+                and_(Friendship.requester_id == current_user.id, Friendship.receiver_id == target_user_id),
+                and_(Friendship.requester_id == target_user_id, Friendship.receiver_id == current_user.id)
+            )
+        )
+    )
+    rel = existing.scalar_one_or_none()
+    if rel:
+        await db.delete(rel)
+        await db.commit()
+        return {"message": "Friend removed", "status": "none"}
+    return {"message": "Friendship not found", "status": "none"}
+
 @router.get("/my-friends", response_model=List[UserResponse])
 async def get_my_friends(
     db: AsyncSession = Depends(get_db),

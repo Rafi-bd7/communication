@@ -1,11 +1,11 @@
 from typing import List
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, or_
+from sqlalchemy import select, or_, and_
 
 from app.core.database import get_db
 from app.core.security import get_current_user
-from app.models.models import User
+from app.models.models import User, Friendship
 from app.schemas.schemas import UserResponse, UserUpdate
 
 router = APIRouter(prefix="/users", tags=["users"])
@@ -52,6 +52,26 @@ async def get_user_profile(
     user = result.scalar_one_or_none()
     if not user:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+
+    # If not self, verify friendship before revealing private contact details
+    if user.id != current_user.id:
+        f_stmt = select(Friendship).where(
+            and_(
+                Friendship.status == "accepted",
+                or_(
+                    and_(Friendship.requester_id == current_user.id, Friendship.receiver_id == user.id),
+                    and_(Friendship.requester_id == user.id, Friendship.receiver_id == current_user.id)
+                )
+            )
+        )
+        f_res = await db.execute(f_stmt)
+        is_friend = f_res.scalar_one_or_none() is not None
+        if not is_friend:
+            resp = UserResponse.model_validate(user)
+            resp.email = ""
+            resp.phone = None
+            return resp
+
     return UserResponse.model_validate(user)
 
 @router.put("/profile", response_model=UserResponse)

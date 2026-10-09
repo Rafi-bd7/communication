@@ -592,6 +592,7 @@ export default function ChatPage() {
             onStartCall={(target, type) => handleStartCall(type, target)}
             onOpenDiscoverPeople={() => setIsDiscoverPeopleOpen(true)}
             onOpenQuickAdda={() => setIsQuickAddaOpen(true)}
+            onViewProfile={handleOpenUserProfile}
           />
         )}
 

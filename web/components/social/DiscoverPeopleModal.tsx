@@ -252,15 +252,19 @@ export function DiscoverPeopleModal({
             ) : (
               pendingRequests.map((req) => (
                 <div key={req.id} className="py-3 flex items-center justify-between gap-3">
-                  <div className="flex items-center gap-3">
+                  <div 
+                    onClick={() => onViewProfile && onViewProfile(req.requester)}
+                    className="flex items-center gap-3 cursor-pointer group flex-1 min-w-0"
+                    title={lang === 'bn' ? `${req.requester.full_name} এর প্রোফাইল দেখুন` : 'View Profile'}
+                  >
                     <UserAvatar
                       name={req.requester.full_name || req.requester.username}
                       avatarUrl={req.requester.avatar_url}
                       size="md"
                     />
-                    <div>
-                      <h4 className="text-xs font-bold text-white">{req.requester.full_name}</h4>
-                      <p className="text-[10px] text-gray-400">@{req.requester.username}</p>
+                    <div className="min-w-0">
+                      <h4 className="text-xs font-bold text-white group-hover:text-brand-emerald transition-colors truncate">{req.requester.full_name}</h4>
+                      <p className="text-[10px] text-gray-400 truncate">@{req.requester.username}</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-2">

@@ -7,6 +7,10 @@ import {
   Phone, 
   Video, 
   UserPlus, 
+  UserCheck,
+  UserX,
+  Lock,
+  Unlock,
   Check, 
   Calendar, 
   Mail, 
@@ -21,7 +25,8 @@ import {
   Globe,
   Users,
   Save,
-  User as UserIcon
+  User as UserIcon,
+  ShieldAlert
 } from 'lucide-react';
 import { api } from '@/lib/api';
 import { useLanguage } from '@/lib/i18n';
@@ -48,9 +53,11 @@ export function UserProfileModal({
   
   const [profileUser, setProfileUser] = useState<any>(initialUser);
   const [posts, setPosts] = useState<any[]>([]);
-  const [isLoadingPosts, setIsLoadingPosts] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [friendshipStatus, setFriendshipStatus] = useState<string>('none');
-  const [activeTab, setActiveTab] = useState<'posts' | 'about'>('posts');
+  const [friendshipId, setFriendshipId] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<'about' | 'posts'>('about');
+  const [actionLoading, setActionLoading] = useState(false);
 
   // Edit Mode State (for self profile)
   const [isEditing, setIsEditing] = useState(false);
@@ -62,36 +69,113 @@ export function UserProfileModal({
   const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
-  const isSelf = currentUser?.id === profileUser?.id;
+  const isSelf = Boolean(currentUser?.id && profileUser?.id && currentUser.id === profileUser.id);
+  const isFriends = friendshipStatus === 'friends';
+  const hasFullAccess = isSelf || isFriends;
+
+  const loadProfileData = async (targetId: string) => {
+    setIsLoading(true);
+    try {
+      const [fullUser, statusRes, userPosts] = await Promise.all([
+        api.getUserProfile(targetId).catch(() => null),
+        api.getFriendshipStatus(targetId).catch(() => ({ status: 'none', friendship_id: null })),
+        api.getUserPosts(targetId).catch(() => []),
+      ]);
+
+      if (fullUser) {
+        setProfileUser(fullUser);
+        if (currentUser?.id === targetId) {
+          setEditFullName(fullUser.full_name || '');
+          setEditBio(fullUser.bio || '');
+          setEditPhone(fullUser.phone || '');
+          setEditAvatarUrl(fullUser.avatar_url || '');
+        }
+      }
+      if (statusRes) {
+        setFriendshipStatus(statusRes.status || 'none');
+        setFriendshipId(statusRes.friendship_id || null);
+      }
+      setPosts(userPosts || []);
+    } catch (err) {
+      console.error('Error loading profile data:', err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   useEffect(() => {
-    if (initialUser) {
+    if (isOpen && initialUser?.id) {
       setProfileUser(initialUser);
       setEditFullName(initialUser.full_name || '');
       setEditBio(initialUser.bio || '');
       setEditPhone(initialUser.phone || '');
       setEditAvatarUrl(initialUser.avatar_url || '');
+      loadProfileData(initialUser.id);
+    } else {
+      setIsEditing(false);
     }
-  }, [initialUser]);
-
-  useEffect(() => {
-    if (isOpen && profileUser?.id) {
-      setIsLoadingPosts(true);
-      api.getUserPosts(profileUser.id)
-        .then((data) => setPosts(data || []))
-        .catch(() => setPosts([]))
-        .finally(() => setIsLoadingPosts(false));
-    }
-  }, [isOpen, profileUser?.id]);
+  }, [isOpen, initialUser?.id]);
 
   if (!isOpen || !profileUser) return null;
 
   const handleSendFriendRequest = async () => {
+    setActionLoading(true);
     try {
       const res = await api.sendFriendRequest(profileUser.id);
-      setFriendshipStatus(res.status);
+      setFriendshipStatus(res.status || 'pending_sent');
+      if (res.id) setFriendshipId(res.id);
+      await loadProfileData(profileUser.id);
     } catch (err) {
-      alert('Could not send friend request');
+      alert(lang === 'bn' ? 'ফ্রেন্ড রিকোয়েস্ট পাঠানো যায়নি' : 'Could not send friend request');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleCancelFriendRequest = async () => {
+    setActionLoading(true);
+    try {
+      await api.cancelFriendRequest(profileUser.id);
+      setFriendshipStatus('none');
+      setFriendshipId(null);
+      await loadProfileData(profileUser.id);
+    } catch (err) {
+      alert(lang === 'bn' ? 'অনুরোধ বাতিল করা যায়নি' : 'Could not cancel request');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleAcceptFriendRequest = async () => {
+    if (!friendshipId) return;
+    setActionLoading(true);
+    try {
+      await api.acceptFriendRequest(friendshipId);
+      setFriendshipStatus('friends');
+      await loadProfileData(profileUser.id);
+    } catch (err) {
+      alert(lang === 'bn' ? 'অনুরোধ গ্রহণ করা যায়নি' : 'Could not accept request');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleUnfriend = async () => {
+    const confirmMsg = lang === 'bn'
+      ? `আপনি কি নিশ্চিত যে ${profileUser.full_name}-কে আনফ্রেন্ড করতে চান?`
+      : `Are you sure you want to unfriend ${profileUser.full_name}?`;
+    if (!window.confirm(confirmMsg)) return;
+
+    setActionLoading(true);
+    try {
+      await api.unfriendUser(profileUser.id);
+      setFriendshipStatus('none');
+      setFriendshipId(null);
+      await loadProfileData(profileUser.id);
+    } catch (err) {
+      alert(lang === 'bn' ? 'আনফ্রেন্ড করা যায়নি' : 'Could not unfriend');
+    } finally {
+      setActionLoading(false);
     }
   };
 
@@ -145,16 +229,37 @@ export function UserProfileModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4 select-none">
+    <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 select-none">
       <div className="bg-[#111b21] border border-brand-border rounded-3xl w-full max-w-lg shadow-2xl overflow-hidden text-white flex flex-col max-h-[92vh] animate-fade-in">
         
         {/* Cover Banner (Facebook Style) */}
         <div className="relative">
           <div className="h-32 sm:h-36 w-full bg-gradient-to-r from-emerald-800 via-teal-900 to-indigo-950 relative">
-            <div className="absolute inset-0 bg-black/20" />
+            <div className="absolute inset-0 bg-black/25" />
+
+            {/* Privacy indicator badge on cover banner */}
+            <div className="absolute top-3 left-4">
+              {isSelf ? (
+                <span className="px-2.5 py-1 rounded-full bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 text-[10px] font-extrabold flex items-center gap-1 shadow">
+                  <ShieldCheck className="w-3 h-3" />
+                  <span>{lang === 'bn' ? 'আমার প্রোফাইল' : 'My Profile'}</span>
+                </span>
+              ) : isFriends ? (
+                <span className="px-2.5 py-1 rounded-full bg-emerald-500/25 border border-emerald-500/50 text-emerald-300 text-[10px] font-extrabold flex items-center gap-1 shadow backdrop-blur-sm">
+                  <UserCheck className="w-3 h-3" />
+                  <span>{lang === 'bn' ? '✓ পরস্পরের বন্ধু (সব উন্মুক্ত)' : '✓ Friends (Full Access)'}</span>
+                </span>
+              ) : (
+                <span className="px-2.5 py-1 rounded-full bg-amber-500/25 border border-amber-500/50 text-amber-300 text-[10px] font-extrabold flex items-center gap-1 shadow backdrop-blur-sm">
+                  <Lock className="w-3 h-3" />
+                  <span>{lang === 'bn' ? '🔒 প্রাইভেট (বন্ধু হলে সব দৃশ্যমান)' : '🔒 Private (Friend required)'}</span>
+                </span>
+              )}
+            </div>
+
             <button
               onClick={onClose}
-              className="absolute top-4 right-4 w-8 h-8 rounded-full bg-black/50 hover:bg-black/70 flex items-center justify-center text-white transition-colors z-10"
+              className="absolute top-3 right-4 w-8 h-8 rounded-full bg-black/50 hover:bg-black/80 flex items-center justify-center text-white transition-colors z-10"
             >
               <X className="w-4 h-4" />
             </button>
@@ -196,7 +301,7 @@ export function UserProfileModal({
             </div>
 
             {/* Header Action Buttons */}
-            <div className="flex items-center gap-2 mb-2">
+            <div className="flex items-center gap-2 mb-2 flex-wrap justify-end">
               {isSelf ? (
                 <button
                   onClick={() => setIsEditing(!isEditing)}
@@ -207,31 +312,87 @@ export function UserProfileModal({
                 </button>
               ) : (
                 <>
+                  {/* Dynamic Friendship State Buttons */}
+                  {friendshipStatus === 'friends' ? (
+                    <div className="flex items-center gap-1.5">
+                      <span className="px-3 py-1.5 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 font-bold text-xs flex items-center gap-1">
+                        <Check className="w-3.5 h-3.5" />
+                        <span>{lang === 'bn' ? 'বন্ধু' : 'Friends'}</span>
+                      </span>
+                      <button
+                        onClick={handleUnfriend}
+                        disabled={actionLoading}
+                        title={lang === 'bn' ? 'বন্ধু তালিকা থেকে সরান' : 'Unfriend'}
+                        className="px-2.5 py-1.5 rounded-xl bg-red-500/15 hover:bg-red-500/25 border border-red-500/30 text-red-400 font-semibold text-xs transition-colors"
+                      >
+                        <UserX className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  ) : friendshipStatus === 'pending_sent' ? (
+                    <button
+                      onClick={handleCancelFriendRequest}
+                      disabled={actionLoading}
+                      className="px-3 py-1.5 rounded-xl bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 border border-rose-500/40 font-bold text-xs flex items-center gap-1.5 transition-all"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                      <span>{lang === 'bn' ? 'অনুরোধ বাতিল' : 'Cancel Request'}</span>
+                    </button>
+                  ) : friendshipStatus === 'pending_received' ? (
+                    <div className="flex items-center gap-1.5">
+                      <button
+                        onClick={handleAcceptFriendRequest}
+                        disabled={actionLoading}
+                        className="px-3 py-1.5 rounded-xl bg-brand-emerald text-brand-dark font-extrabold text-xs shadow-md hover:brightness-110 flex items-center gap-1"
+                      >
+                        <Check className="w-3.5 h-3.5" />
+                        <span>{lang === 'bn' ? 'অনুরোধ গ্রহণ' : 'Accept'}</span>
+                      </button>
+                      <button
+                        onClick={handleCancelFriendRequest}
+                        disabled={actionLoading}
+                        className="p-1.5 rounded-xl bg-[#202c33] text-gray-400 hover:text-white"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={handleSendFriendRequest}
+                      disabled={actionLoading}
+                      className="px-3.5 py-2 rounded-xl bg-brand-emerald text-brand-dark font-extrabold text-xs shadow-md hover:brightness-110 flex items-center gap-1.5 active:scale-95 transition-all"
+                    >
+                      <UserPlus className="w-3.5 h-3.5" />
+                      <span>{lang === 'bn' ? 'বন্ধু করুন' : 'Add Friend'}</span>
+                    </button>
+                  )}
+
+                  {/* Direct Chat Shortcut */}
                   {onStartChat && (
                     <button
                       onClick={() => {
                         onStartChat(profileUser.id);
                         onClose();
                       }}
-                      className="px-4 py-2 rounded-xl bg-brand-emerald text-brand-dark font-bold text-xs shadow-md hover:brightness-110 flex items-center gap-1.5 active:scale-95 transition-all"
+                      className="px-3.5 py-2 rounded-xl bg-[#202c33] hover:bg-[#2a3942] text-white border border-brand-border font-bold text-xs shadow flex items-center gap-1.5 transition-all"
                     >
-                      <MessageSquare className="w-3.5 h-3.5" />
+                      <MessageSquare className="w-3.5 h-3.5 text-brand-emerald" />
                       <span>{lang === 'bn' ? 'মেসেজ' : 'Message'}</span>
                     </button>
                   )}
 
+                  {/* Call Shortcuts (enabled for friends or direct) */}
                   {onStartCall && (
                     <>
                       <button
                         onClick={() => onStartCall(profileUser, 'voice')}
-                        title="ভয়েস কল"
+                        title={lang === 'bn' ? 'ভয়েস কল' : 'Voice Call'}
                         className="p-2 rounded-xl bg-[#202c33] hover:bg-[#2a3942] text-brand-emerald border border-brand-border transition-colors"
                       >
                         <Phone className="w-4 h-4" />
                       </button>
                       <button
                         onClick={() => onStartCall(profileUser, 'video')}
-                        title="ভিডিও কল"
+                        title={lang === 'bn' ? 'ভিডিও কল' : 'Video Call'}
                         className="p-2 rounded-xl bg-[#202c33] hover:bg-[#2a3942] text-purple-400 border border-brand-border transition-colors"
                       >
                         <Video className="w-4 h-4" />
@@ -249,7 +410,7 @@ export function UserProfileModal({
           <form onSubmit={handleSaveProfile} className="p-6 space-y-4 overflow-y-auto">
             <h3 className="font-extrabold text-sm text-brand-emerald flex items-center gap-2">
               <Edit3 className="w-4 h-4" />
-              <span>{lang === 'bn' ? 'প্রোফাইল তথ্য সম্পাদন করুন' : 'Edit Profile Details'}</span>
+              <span>{lang === 'bn' ? 'প্রোফাইল তথ্য পরিবর্তন করুন' : 'Edit Profile Details'}</span>
             </h3>
 
             <div>
@@ -312,23 +473,38 @@ export function UserProfileModal({
         ) : (
           <>
             {/* User Identity Details */}
-            <div className="px-6 pt-3 pb-4 border-b border-brand-border/60">
-              <h2 className="text-xl font-extrabold text-white flex items-center gap-2">
-                {profileUser.full_name}
-                {profileUser.is_admin && (
-                  <span className="px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-300 text-[10px] font-bold">
-                    Admin
+            <div className="px-6 pt-3 pb-3 border-b border-brand-border/60">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-xl font-extrabold text-white flex items-center gap-2">
+                    {profileUser.full_name}
+                    {profileUser.is_admin && (
+                      <span className="px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-300 text-[10px] font-bold">
+                        Admin
+                      </span>
+                    )}
+                  </h2>
+                  <p className="text-xs text-brand-emerald font-medium">@{profileUser.username}</p>
+                </div>
+
+                <div className="text-right">
+                  <span className={`inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-0.5 rounded-full ${
+                    profileUser.is_online
+                      ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+                      : 'bg-gray-500/20 text-gray-400 border border-gray-500/30'
+                  }`}>
+                    <span className={`w-2 h-2 rounded-full ${profileUser.is_online ? 'bg-emerald-400 animate-pulse' : 'bg-gray-400'}`} />
+                    <span>{profileUser.is_online ? (lang === 'bn' ? 'এখন সক্রিয়' : 'Active Now') : (lang === 'bn' ? 'অফলাইন' : 'Offline')}</span>
                   </span>
-                )}
-              </h2>
-              <p className="text-xs text-brand-emerald font-medium">@{profileUser.username}</p>
+                </div>
+              </div>
 
               <p className="mt-2 text-xs text-gray-300 leading-relaxed whitespace-pre-wrap">
                 {profileUser.bio || (lang === 'bn' ? 'আড্ডায় নিয়মিত যুক্ত থাকি।' : 'Hey there! I am using Adda.')}
               </p>
 
               {/* Social Stats Strip */}
-              <div className="mt-4 grid grid-cols-2 gap-3 pt-3 border-t border-brand-border/40 text-xs">
+              <div className="mt-3 grid grid-cols-2 gap-3 pt-3 border-t border-brand-border/40 text-xs">
                 <div className="p-2.5 rounded-xl bg-[#202c33]/70 border border-brand-border flex items-center gap-2.5">
                   <FileText className="w-4 h-4 text-brand-emerald" />
                   <div>
@@ -352,6 +528,18 @@ export function UserProfileModal({
             {/* Tab Selector */}
             <div className="px-6 border-b border-brand-border/60 flex gap-6 bg-[#0b141a]/40 text-xs font-semibold">
               <button
+                onClick={() => setActiveTab('about')}
+                className={`py-3 border-b-2 transition-all flex items-center gap-2 ${
+                  activeTab === 'about'
+                    ? 'border-brand-emerald text-brand-emerald font-bold'
+                    : 'border-transparent text-gray-400 hover:text-white'
+                }`}
+              >
+                <ShieldCheck className="w-3.5 h-3.5" />
+                <span>{lang === 'bn' ? 'পরিচিতি ও যাবতীয় তথ্য' : 'About & Details'}</span>
+              </button>
+
+              <button
                 onClick={() => setActiveTab('posts')}
                 className={`py-3 border-b-2 transition-all flex items-center gap-2 ${
                   activeTab === 'posts'
@@ -362,24 +550,146 @@ export function UserProfileModal({
                 <FileText className="w-3.5 h-3.5" />
                 <span>{lang === 'bn' ? 'টাইমলাইন পোস্টসমূহ' : 'Timeline Posts'} ({posts.length})</span>
               </button>
-
-              <button
-                onClick={() => setActiveTab('about')}
-                className={`py-3 border-b-2 transition-all flex items-center gap-2 ${
-                  activeTab === 'about'
-                    ? 'border-brand-emerald text-brand-emerald font-bold'
-                    : 'border-transparent text-gray-400 hover:text-white'
-                }`}
-              >
-                <ShieldCheck className="w-3.5 h-3.5" />
-                <span>{lang === 'bn' ? 'পরিচিতি ও বিবরণ' : 'About Details'}</span>
-              </button>
             </div>
 
             {/* Tab Content Body */}
-            <div className="flex-1 overflow-y-auto p-6">
-              {activeTab === 'posts' ? (
-                isLoadingPosts ? (
+            <div className="flex-1 overflow-y-auto p-5 space-y-4">
+              {activeTab === 'about' ? (
+                <div className="space-y-3.5 text-xs text-gray-300">
+                  
+                  {/* Privacy Alert when not friends and not self */}
+                  {!hasFullAccess && (
+                    <div className="p-4 rounded-2xl bg-gradient-to-r from-amber-500/15 via-emerald-500/10 to-blue-500/10 border border-amber-500/30 text-xs shadow-md">
+                      <div className="flex items-center gap-2 text-amber-300 font-extrabold mb-1">
+                        <Lock className="w-4 h-4" />
+                        <span>{lang === 'bn' ? 'প্রাইভেসি সুরক্ষা সক্রিয়' : 'Privacy Protection Active'}</span>
+                      </div>
+                      <p className="text-gray-300 text-[11px] leading-relaxed mb-3">
+                        {lang === 'bn'
+                          ? 'এই ব্যবহারকারীর ইমেইল ঠিকানা, ফোন নম্বর এবং গোপনীয় পোস্টগুলো দেখতে হলে পরস্পরের বন্ধু হতে হবে।'
+                          : 'Email, phone number, and friend-only posts are visible only to mutual friends.'}
+                      </p>
+
+                      {friendshipStatus === 'none' && (
+                        <button
+                          onClick={handleSendFriendRequest}
+                          disabled={actionLoading}
+                          className="px-4 py-2 rounded-xl bg-brand-emerald text-brand-dark font-extrabold text-xs flex items-center gap-1.5 shadow hover:brightness-110 active:scale-95 transition-all"
+                        >
+                          <UserPlus className="w-3.5 h-3.5" />
+                          <span>{lang === 'bn' ? 'সব কিছু দেখতে ফ্রেন্ড রিকোয়েস্ট পাঠান' : 'Send Friend Request to Unlock'}</span>
+                        </button>
+                      )}
+
+                      {friendshipStatus === 'pending_sent' && (
+                        <div className="flex items-center justify-between gap-2 pt-1 text-[11px] text-amber-300 font-bold">
+                          <span>⏳ {lang === 'bn' ? 'ফ্রেন্ড রিকোয়েস্ট পাঠানো হয়েছে। তিনি একসেপ্ট করলেই সব দেখা যাবে।' : 'Friend request sent. Waiting for acceptance.'}</span>
+                          <button
+                            onClick={handleCancelFriendRequest}
+                            className="px-2.5 py-1 rounded-lg bg-rose-500/20 text-rose-300 text-[10px] font-bold"
+                          >
+                            {lang === 'bn' ? 'বাতিল' : 'Cancel'}
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Mutual Friends Banner */}
+                  {isFriends && (
+                    <div className="p-3.5 rounded-2xl bg-emerald-500/15 border border-emerald-500/30 flex items-center gap-2.5 text-emerald-300">
+                      <Unlock className="w-4 h-4 flex-shrink-0" />
+                      <span className="font-bold text-xs">
+                        {lang === 'bn'
+                          ? 'আপনারা পরস্পরের বন্ধু। এই ব্যবহারকারীর সব তথ্য ও পোস্ট আপনার জন্য উন্মুক্ত।'
+                          : 'You are mutual friends. All profile details and posts are unlocked.'}
+                      </span>
+                    </div>
+                  )}
+
+                  {/* Identity: Full Name */}
+                  <div className="p-3.5 rounded-2xl bg-[#1a232a] border border-brand-border/80 flex items-center gap-3">
+                    <UserIcon className="w-4 h-4 text-brand-emerald flex-shrink-0" />
+                    <div className="min-w-0 flex-1">
+                      <span className="text-[10px] text-gray-400 block">{lang === 'bn' ? 'পুরো নাম' : 'Full Name'}</span>
+                      <span className="font-bold text-white truncate block">{profileUser.full_name}</span>
+                    </div>
+                  </div>
+
+                  {/* Username */}
+                  <div className="p-3.5 rounded-2xl bg-[#1a232a] border border-brand-border/80 flex items-center gap-3">
+                    <Globe className="w-4 h-4 text-brand-emerald flex-shrink-0" />
+                    <div className="min-w-0 flex-1">
+                      <span className="text-[10px] text-gray-400 block">{lang === 'bn' ? 'ইউজারনেম' : 'Username'}</span>
+                      <span className="font-semibold text-white truncate block">@{profileUser.username}</span>
+                    </div>
+                  </div>
+
+                  {/* Email Address - Protected by Friendship Status */}
+                  <div className="p-3.5 rounded-2xl bg-[#1a232a] border border-brand-border/80 flex items-center gap-3">
+                    <Mail className="w-4 h-4 text-brand-emerald flex-shrink-0" />
+                    <div className="min-w-0 flex-1">
+                      <span className="text-[10px] text-gray-400 block">{lang === 'bn' ? 'ইমেইল ঠিকানা' : 'Email Address'}</span>
+                      {hasFullAccess ? (
+                        <div className="flex items-center gap-2">
+                          <span className="font-bold text-white truncate">{profileUser.email || (lang === 'bn' ? 'গোপন' : 'Hidden')}</span>
+                          <span className="px-1.5 py-0.2 rounded-full bg-emerald-500/20 text-emerald-300 text-[9px] font-bold">
+                            {lang === 'bn' ? 'যাচাইকৃত' : 'Verified'}
+                          </span>
+                        </div>
+                      ) : (
+                        <span className="text-amber-400 font-semibold flex items-center gap-1.5">
+                          <Lock className="w-3.5 h-3.5 text-amber-400" />
+                          <span>{lang === 'bn' ? '🔒 শুধু বন্ধুদের জন্য দৃশ্যমান' : '🔒 Visible only to friends'}</span>
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Phone Number - Protected by Friendship Status */}
+                  <div className="p-3.5 rounded-2xl bg-[#1a232a] border border-brand-border/80 flex items-center gap-3">
+                    <PhoneIcon className="w-4 h-4 text-brand-emerald flex-shrink-0" />
+                    <div className="min-w-0 flex-1">
+                      <span className="text-[10px] text-gray-400 block">{lang === 'bn' ? 'মোবাইল নম্বর' : 'Phone'}</span>
+                      {hasFullAccess ? (
+                        <span className="font-bold text-white truncate block">
+                          {profileUser.phone || (lang === 'bn' ? 'যুক্ত করা হয়নি' : 'Not added')}
+                        </span>
+                      ) : (
+                        <span className="text-amber-400 font-semibold flex items-center gap-1.5">
+                          <Lock className="w-3.5 h-3.5 text-amber-400" />
+                          <span>{lang === 'bn' ? '🔒 শুধু বন্ধুদের জন্য দৃশ্যমান' : '🔒 Visible only to friends'}</span>
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Bio */}
+                  <div className="p-3.5 rounded-2xl bg-[#1a232a] border border-brand-border/80 flex items-start gap-3">
+                    <FileText className="w-4 h-4 text-brand-emerald flex-shrink-0 mt-0.5" />
+                    <div className="min-w-0 flex-1">
+                      <span className="text-[10px] text-gray-400 block mb-0.5">{lang === 'bn' ? 'নিজের সম্পর্কে (Bio)' : 'Bio / About'}</span>
+                      <span className="font-medium text-gray-200 whitespace-pre-wrap leading-relaxed block">
+                        {profileUser.bio || (lang === 'bn' ? 'কোনো বায়ো যোগ করা হয়নি।' : 'No bio added yet.')}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Account Verification & Security */}
+                  <div className="p-3.5 rounded-2xl bg-[#1a232a] border border-brand-border/80 flex items-center gap-3">
+                    <ShieldCheck className="w-4 h-4 text-brand-emerald flex-shrink-0" />
+                    <div className="min-w-0 flex-1">
+                      <span className="text-[10px] text-gray-400 block">{lang === 'bn' ? 'নিরাপত্তা ও স্ট্যাটাস' : 'Account Status'}</span>
+                      <span className="font-bold text-emerald-400">
+                        {lang === 'bn' ? 'যাচাইকৃত সক্রিয় অ্যাকাউন্ট (Active & Verified)' : 'Active & Verified Account'}
+                      </span>
+                    </div>
+                  </div>
+
+                </div>
+              ) : (
+                /* Posts Tab */
+                isLoading ? (
                   <div className="py-10 flex flex-col items-center justify-center text-gray-400 gap-2">
                     <div className="w-6 h-6 rounded-full border-2 border-brand-emerald border-t-transparent animate-spin" />
                     <p className="text-xs">{t.loading}</p>
@@ -387,10 +697,27 @@ export function UserProfileModal({
                 ) : posts.length === 0 ? (
                   <div className="py-12 text-center text-gray-400 text-xs flex flex-col items-center gap-2">
                     <Sparkles className="w-8 h-8 text-gray-600" />
-                    <p>{lang === 'bn' ? 'এখনও কোনো পোস্ট প্রকাশ করা হয়নি।' : 'No timeline posts published yet.'}</p>
+                    <p className="font-bold text-white">{lang === 'bn' ? 'এখনও কোনো পোস্ট প্রকাশ করা হয়নি।' : 'No timeline posts published yet.'}</p>
+                    {!hasFullAccess && (
+                      <p className="text-[11px] text-amber-300 flex items-center gap-1 mt-1">
+                        <Lock className="w-3.5 h-3.5" />
+                        <span>{lang === 'bn' ? 'গোপনীয় পোস্টগুলো দেখতে ফ্রেন্ড রিকোয়েস্ট পাঠান।' : 'Friend-only posts are hidden until you become friends.'}</span>
+                      </p>
+                    )}
                   </div>
                 ) : (
                   <div className="space-y-4">
+                    {!hasFullAccess && (
+                      <div className="p-3 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs flex items-center gap-2">
+                        <Lock className="w-4 h-4 flex-shrink-0" />
+                        <span>
+                          {lang === 'bn'
+                            ? 'এখানে শুধু পাবলিক পোস্টগুলো প্রদর্শিত হচ্ছে। বাকি পোস্ট দেখতে বন্ধু হন।'
+                            : 'Only public posts are visible. Connect as friends to see all posts.'}
+                        </span>
+                      </div>
+                    )}
+
                     {posts.map((post) => (
                       <div
                         key={post.id}
@@ -406,7 +733,7 @@ export function UserProfileModal({
                             <div>
                               <h4 className="text-xs font-bold text-white">{profileUser.full_name}</h4>
                               <span className="text-[10px] text-gray-400">
-                                {new Date(post.created_at).toLocaleDateString()}
+                                {new Date(post.created_at).toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' })}
                               </span>
                             </div>
                           </div>
@@ -453,48 +780,6 @@ export function UserProfileModal({
                     ))}
                   </div>
                 )
-              ) : (
-                <div className="space-y-3 text-xs text-gray-300">
-                  <div className="p-3 rounded-xl bg-[#1a232a] border border-brand-border flex items-center gap-3">
-                    <UserIcon className="w-4 h-4 text-brand-emerald" />
-                    <div>
-                      <span className="text-[10px] text-gray-400 block">{lang === 'bn' ? 'পুরো নাম' : 'Full Name'}</span>
-                      <span className="font-semibold text-white">{profileUser.full_name}</span>
-                    </div>
-                  </div>
-
-                  <div className="p-3 rounded-xl bg-[#1a232a] border border-brand-border flex items-center gap-3">
-                    <Mail className="w-4 h-4 text-brand-emerald" />
-                    <div>
-                      <span className="text-[10px] text-gray-400 block">{lang === 'bn' ? 'ইমেইল ঠিকানা' : 'Email Address'}</span>
-                      <span className="font-semibold text-white">{profileUser.email || (lang === 'bn' ? 'গোপনীয় রাখা হয়েছে' : 'Hidden')}</span>
-                    </div>
-                  </div>
-
-                  <div className="p-3 rounded-xl bg-[#1a232a] border border-brand-border flex items-center gap-3">
-                    <PhoneIcon className="w-4 h-4 text-brand-emerald" />
-                    <div>
-                      <span className="text-[10px] text-gray-400 block">{lang === 'bn' ? 'মোবাইল নম্বর' : 'Phone'}</span>
-                      <span className="font-semibold text-white">{profileUser.phone || (lang === 'bn' ? 'যুক্ত করা হয়নি' : 'Not added')}</span>
-                    </div>
-                  </div>
-
-                  <div className="p-3 rounded-xl bg-[#1a232a] border border-brand-border flex items-center gap-3">
-                    <FileText className="w-4 h-4 text-brand-emerald" />
-                    <div>
-                      <span className="text-[10px] text-gray-400 block">{lang === 'bn' ? 'নিজের সম্পর্কে (Bio)' : 'Bio / About'}</span>
-                      <span className="font-semibold text-white whitespace-pre-wrap">{profileUser.bio || (lang === 'bn' ? 'কোনো বায়ো নেই' : 'No bio added yet')}</span>
-                    </div>
-                  </div>
-
-                  <div className="p-3 rounded-xl bg-[#1a232a] border border-brand-border flex items-center gap-3">
-                    <ShieldCheck className="w-4 h-4 text-brand-emerald" />
-                    <div>
-                      <span className="text-[10px] text-gray-400 block">{lang === 'bn' ? 'অ্যাকাউন্ট ভেরিফিকেশন' : 'Account Status'}</span>
-                      <span className="font-semibold text-emerald-400">Active & Verified Account</span>
-                    </div>
-                  </div>
-                </div>
               )}
             </div>
           </>

@@ -50,6 +50,7 @@ interface UserHomePageProps {
   onStartCall: (target: any, type: 'voice' | 'video') => void;
   onOpenDiscoverPeople: () => void;
   onOpenQuickAdda: () => void;
+  onViewProfile?: (user: any) => void;
 }
 
 export function UserHomePage({
@@ -60,6 +61,7 @@ export function UserHomePage({
   onStartCall,
   onOpenDiscoverPeople,
   onOpenQuickAdda,
+  onViewProfile,
 }: UserHomePageProps) {
   const { user } = useAuth();
   const { lang, t } = useLanguage();
@@ -232,12 +234,17 @@ export function UserHomePage({
           <div className="bg-[#111b21] border border-brand-border rounded-3xl p-5 shadow-xl">
             <form onSubmit={handleCreatePost} className="flex flex-col gap-4">
               <div className="flex items-start gap-3">
-                <UserAvatar
-                  name={user?.full_name || 'Me'}
-                  avatarUrl={user?.avatar_url}
-                  size="md"
-                  className="mt-1"
-                />
+                <div
+                  onClick={() => onViewProfile && user && onViewProfile(user)}
+                  className="cursor-pointer hover:opacity-85 transition-opacity mt-1"
+                  title={lang === 'bn' ? 'আমার প্রোফাইল দেখুন' : 'View My Profile'}
+                >
+                  <UserAvatar
+                    name={user?.full_name || 'Me'}
+                    avatarUrl={user?.avatar_url}
+                    size="md"
+                  />
+                </div>
                 <div className="flex-1">
                   <textarea
                     value={postContent}
@@ -351,7 +358,11 @@ export function UserHomePage({
                   >
                     {/* Post Header */}
                     <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
+                      <div 
+                        onClick={() => onViewProfile && onViewProfile(post.author)}
+                        className="flex items-center gap-3 cursor-pointer group"
+                        title={lang === 'bn' ? `${post.author.full_name} এর প্রোফাইল দেখুন` : 'View Profile'}
+                      >
                         <UserAvatar
                           name={post.author.full_name}
                           avatarUrl={post.author.avatar_url}
@@ -359,7 +370,7 @@ export function UserHomePage({
                         />
                         <div>
                           <div className="flex items-center gap-2">
-                            <h4 className="font-bold text-sm text-white hover:text-brand-emerald cursor-pointer">
+                            <h4 className="font-bold text-sm text-white group-hover:text-brand-emerald transition-colors">
                               {post.author.full_name}
                             </h4>
                             {/* Privacy Badge */}
@@ -546,7 +557,11 @@ export function UserHomePage({
                     key={contact.id}
                     className="p-2.5 rounded-2xl bg-[#182229]/60 hover:bg-[#202c33] border border-transparent hover:border-brand-border flex items-center justify-between transition-all"
                   >
-                    <div className="flex items-center gap-2.5 min-w-0">
+                    <div 
+                      onClick={() => onViewProfile && onViewProfile(contact)}
+                      className="flex items-center gap-2.5 min-w-0 cursor-pointer group flex-1"
+                      title={lang === 'bn' ? `${contact.full_name} এর প্রোফাইল দেখুন` : 'View Profile'}
+                    >
                       <div className="relative">
                         <UserAvatar
                           name={contact.full_name}
@@ -556,7 +571,7 @@ export function UserHomePage({
                         <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-emerald-400 border-2 border-[#111b21] rounded-full" />
                       </div>
                       <div className="min-w-0">
-                        <h5 className="font-bold text-xs text-white truncate">{contact.full_name}</h5>
+                        <h5 className="font-bold text-xs text-white group-hover:text-brand-emerald transition-colors truncate">{contact.full_name}</h5>
                         <p className="text-[10px] text-gray-400 truncate">@{contact.username}</p>
                       </div>
                     </div>
