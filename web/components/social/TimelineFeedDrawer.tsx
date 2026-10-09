@@ -109,6 +109,18 @@ export function TimelineFeedDrawer({
     } catch (err) {}
   };
 
+  const handleDeletePost = async (postId: string) => {
+    if (!window.confirm(lang === 'bn' ? '⚠️ আপনি কি নিশ্চিত যে আপনি এই পোস্টটি মুছে ফেলতে চান?' : 'Are you sure you want to delete this post?')) {
+      return;
+    }
+    try {
+      await api.deletePost(postId);
+      setPosts((prev) => prev.filter((p) => p.id !== postId));
+    } catch (err: any) {
+      alert(err.message || (lang === 'bn' ? 'পোস্ট ডিলিট করা যায়নি' : 'Failed to delete post'));
+    }
+  };
+
   return (
     <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4 select-none">
       <div className="bg-[#111b21] border border-brand-border rounded-3xl w-full max-w-xl shadow-2xl overflow-hidden text-white flex flex-col max-h-[92vh] animate-fade-in">
@@ -274,18 +286,31 @@ export function TimelineFeedDrawer({
                     </div>
                   </div>
 
-                  {onStartChat && user?.id !== post.author.id && (
-                    <button
-                      onClick={() => {
-                        onStartChat(post.author.id);
-                        onClose();
-                      }}
-                      className="px-3 py-1.5 rounded-xl bg-[#202c33] hover:bg-brand-emerald hover:text-brand-dark text-white font-bold text-xs flex items-center gap-1 transition-colors"
-                    >
-                      <MessageSquare className="w-3 h-3" />
-                      <span>{lang === 'bn' ? 'মেসেজ' : 'Message'}</span>
-                    </button>
-                  )}
+                  <div className="flex items-center gap-1.5">
+                    {onStartChat && user?.id !== post.author.id && (
+                      <button
+                        onClick={() => {
+                          onStartChat(post.author.id);
+                          onClose();
+                        }}
+                        className="px-3 py-1.5 rounded-xl bg-[#202c33] hover:bg-brand-emerald hover:text-brand-dark text-white font-bold text-xs flex items-center gap-1 transition-colors"
+                      >
+                        <MessageSquare className="w-3 h-3" />
+                        <span>{lang === 'bn' ? 'মেসেজ' : 'Message'}</span>
+                      </button>
+                    )}
+
+                    {(post.author.id === user?.id || user?.is_admin) && (
+                      <button
+                        type="button"
+                        onClick={() => handleDeletePost(post.id)}
+                        title={lang === 'bn' ? 'পোস্ট ডিলিট করুন' : 'Delete Post'}
+                        className="p-1.5 rounded-xl bg-red-500/10 hover:bg-red-500/25 text-red-400 transition-all active:scale-95"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    )}
+                  </div>
                 </div>
 
                 {/* Post Content */}

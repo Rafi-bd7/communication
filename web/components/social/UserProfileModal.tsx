@@ -31,7 +31,9 @@ import {
   GraduationCap,
   Briefcase,
   Cake,
-  Image as ImageIcon
+  Image as ImageIcon,
+  Trash2,
+  Send
 } from 'lucide-react';
 import { api } from '@/lib/api';
 import { useLanguage } from '@/lib/i18n';
@@ -80,6 +82,55 @@ export function UserProfileModal({
   const [isUploadingCover, setIsUploadingCover] = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const coverInputRef = useRef<HTMLInputElement | null>(null);
+
+  // New Post on Profile States
+  const [newPostContent, setNewPostContent] = useState('');
+  const [newPostMediaUrl, setNewPostMediaUrl] = useState<string | null>(null);
+  const [newPostPrivacy, setNewPostPrivacy] = useState<'public' | 'friends'>('public');
+  const [isCreatingPost, setIsCreatingPost] = useState(false);
+  const postMediaInputRef = useRef<HTMLInputElement | null>(null);
+
+  const handlePostMediaUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      const res = await api.uploadFile(file);
+      setNewPostMediaUrl(res.file_url || res.url);
+    } catch (err) {
+      alert('Photo upload failed');
+    }
+  };
+
+  const handleCreateProfilePost = async () => {
+    if (!newPostContent.trim() && !newPostMediaUrl) return;
+    setIsCreatingPost(true);
+    try {
+      const post = await api.createPost({
+        content: newPostContent.trim(),
+        media_url: newPostMediaUrl || undefined,
+        privacy: newPostPrivacy,
+      });
+      setPosts((prev) => [post, ...prev]);
+      setNewPostContent('');
+      setNewPostMediaUrl(null);
+    } catch (err: any) {
+      alert(err.message || 'পোস্ট শেয়ার করা সম্ভব হয়নি');
+    } finally {
+      setIsCreatingPost(false);
+    }
+  };
+
+  const handleDeleteProfilePost = async (postId: string) => {
+    if (!window.confirm(lang === 'bn' ? '⚠️ আপনি কি নিশ্চিত যে আপনি এই পোস্টটি মুছে ফেলতে চান?' : 'Are you sure you want to delete this post?')) {
+      return;
+    }
+    try {
+      await api.deletePost(postId);
+      setPosts((prev) => prev.filter((p) => p.id !== postId));
+    } catch (err: any) {
+      alert(err.message || (lang === 'bn' ? 'পোস্ট ডিলিট করা যায়নি' : 'Failed to delete post'));
+    }
+  };
 
   const isSelf = Boolean(currentUser?.id && profileUser?.id && currentUser.id === profileUser.id);
   const isFriends = friendshipStatus === 'friends';
@@ -895,97 +946,182 @@ export function UserProfileModal({
                 </div>
               ) : (
                 /* Posts Tab */
-                isLoading ? (
-                  <div className="py-10 flex flex-col items-center justify-center text-gray-400 gap-2">
-                    <div className="w-6 h-6 rounded-full border-2 border-brand-emerald border-t-transparent animate-spin" />
-                    <p className="text-xs">{t.loading}</p>
-                  </div>
-                ) : posts.length === 0 ? (
-                  <div className="py-12 text-center text-gray-400 text-xs flex flex-col items-center gap-2">
-                    <Sparkles className="w-8 h-8 text-gray-600" />
-                    <p className="font-bold text-white">{lang === 'bn' ? 'এখনও কোনো পোস্ট প্রকাশ করা হয়নি।' : 'No timeline posts published yet.'}</p>
-                    {!hasFullAccess && (
-                      <p className="text-[11px] text-amber-300 flex items-center gap-1 mt-1">
-                        <Lock className="w-3.5 h-3.5" />
-                        <span>{lang === 'bn' ? 'গোপনীয় পোস্টগুলো দেখতে ফ্রেন্ড রিকোয়েস্ট পাঠান।' : 'Friend-only posts are hidden until you become friends.'}</span>
-                      </p>
-                    )}
-                  </div>
-                ) : (
-                  <div className="space-y-4">
-                    {!hasFullAccess && (
-                      <div className="p-3 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs flex items-center gap-2">
-                        <Lock className="w-4 h-4 flex-shrink-0" />
-                        <span>
-                          {lang === 'bn'
-                            ? 'এখানে শুধু পাবলিক পোস্টগুলো প্রদর্শিত হচ্ছে। বাকি পোস্ট দেখতে বন্ধু হন।'
-                            : 'Only public posts are visible. Connect as friends to see all posts.'}
-                        </span>
+                <div className="space-y-4">
+                  {/* Post Composer on Profile (when viewing own profile) */}
+                  {isSelf && (
+                    <div className="p-4 rounded-2xl bg-[#1a232a] border border-brand-border/80 space-y-3 shadow-md mb-4">
+                      <div className="flex items-center gap-2.5">
+                        <UserAvatar
+                          name={profileUser.full_name || profileUser.username}
+                          avatarUrl={profileUser.avatar_url}
+                          size="sm"
+                        />
+                        <div className="flex-1">
+                          <textarea
+                            value={newPostContent}
+                            onChange={(e) => setNewPostContent(e.target.value)}
+                            placeholder={lang === 'bn' ? 'আপনার মনে কী আছে? কিছু শেয়ার করুন...' : "What's on your mind? Share something..."}
+                            rows={2}
+                            className="w-full bg-[#111b21] border border-brand-border rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-brand-emerald resize-none"
+                          />
+                        </div>
                       </div>
-                    )}
 
-                    {posts.map((post) => (
-                      <div
-                        key={post.id}
-                        className="p-4 rounded-2xl bg-[#1a232a] border border-brand-border/70 space-y-3 shadow-md"
-                      >
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-3">
-                            <UserAvatar
-                              name={profileUser.full_name || profileUser.username}
-                              avatarUrl={profileUser.avatar_url}
-                              size="sm"
+                      {newPostMediaUrl && (
+                        <div className="relative rounded-xl overflow-hidden max-h-48 border border-brand-border/60">
+                          <img src={newPostMediaUrl} alt="" className="w-full h-full object-cover" />
+                          <button
+                            type="button"
+                            onClick={() => setNewPostMediaUrl(null)}
+                            className="absolute top-2 right-2 w-6 h-6 rounded-full bg-black/70 hover:bg-black text-white flex items-center justify-center text-xs"
+                          >
+                            ✕
+                          </button>
+                        </div>
+                      )}
+
+                      <div className="flex items-center justify-between pt-2 border-t border-brand-border/40 text-xs">
+                        <div className="flex items-center gap-2">
+                          <label className="cursor-pointer p-2 rounded-xl bg-[#202c33] hover:bg-[#2a3942] text-brand-emerald flex items-center gap-1.5 font-semibold transition-colors">
+                            <Camera className="w-4 h-4" />
+                            <span>{lang === 'bn' ? 'ছবি যুক্ত করুন' : 'Add Photo'}</span>
+                            <input
+                              type="file"
+                              accept="image/*"
+                              ref={postMediaInputRef}
+                              onChange={handlePostMediaUpload}
+                              className="hidden"
                             />
-                            <div>
-                              <h4 className="text-xs font-bold text-white">{profileUser.full_name}</h4>
-                              <span className="text-[10px] text-gray-400">
-                                {new Date(post.created_at).toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' })}
+                          </label>
+
+                          <select
+                            value={newPostPrivacy}
+                            onChange={(e) => setNewPostPrivacy(e.target.value as any)}
+                            className="bg-[#202c33] text-gray-300 rounded-xl px-2.5 py-1.5 text-[11px] border border-brand-border focus:outline-none focus:border-brand-emerald"
+                          >
+                            <option value="public">{lang === 'bn' ? '🌍 পাবলিক' : '🌍 Public'}</option>
+                            <option value="friends">{lang === 'bn' ? '👥 শুধু বন্ধুরা' : '👥 Friends Only'}</option>
+                          </select>
+                        </div>
+
+                        <button
+                          type="button"
+                          onClick={handleCreateProfilePost}
+                          disabled={isCreatingPost || (!newPostContent.trim() && !newPostMediaUrl)}
+                          className="px-4 py-2 rounded-xl bg-brand-emerald hover:brightness-110 text-brand-dark font-extrabold text-xs flex items-center gap-1.5 shadow transition-all active:scale-95 disabled:opacity-50"
+                        >
+                          <Send className="w-3.5 h-3.5" />
+                          <span>{isCreatingPost ? (lang === 'bn' ? 'শেয়ার হচ্ছে...' : 'Sharing...') : (lang === 'bn' ? 'শেয়ার করুন' : 'Share')}</span>
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {isLoading ? (
+                    <div className="py-10 flex flex-col items-center justify-center text-gray-400 gap-2">
+                      <div className="w-6 h-6 rounded-full border-2 border-brand-emerald border-t-transparent animate-spin" />
+                      <p className="text-xs">{t.loading}</p>
+                    </div>
+                  ) : posts.length === 0 ? (
+                    <div className="py-12 text-center text-gray-400 text-xs flex flex-col items-center gap-2">
+                      <Sparkles className="w-8 h-8 text-gray-600" />
+                      <p className="font-bold text-white">{lang === 'bn' ? 'এখনও কোনো পোস্ট প্রকাশ করা হয়নি।' : 'No timeline posts published yet.'}</p>
+                      {!hasFullAccess && (
+                        <p className="text-[11px] text-amber-300 flex items-center gap-1 mt-1">
+                          <Lock className="w-3.5 h-3.5" />
+                          <span>{lang === 'bn' ? 'গোপনীয় পোস্টগুলো দেখতে ফ্রেন্ড রিকোয়েস্ট পাঠান।' : 'Friend-only posts are hidden until you become friends.'}</span>
+                        </p>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      {!hasFullAccess && (
+                        <div className="p-3 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs flex items-center gap-2">
+                          <Lock className="w-4 h-4 flex-shrink-0" />
+                          <span>
+                            {lang === 'bn'
+                              ? 'এখানে শুধু পাবলিক পোস্টগুলো প্রদর্শিত হচ্ছে। বাকি পোস্ট দেখতে বন্ধু হন।'
+                              : 'Only public posts are visible. Connect as friends to see all posts.'}
+                          </span>
+                        </div>
+                      )}
+
+                      {posts.map((post) => (
+                        <div
+                          key={post.id}
+                          className="p-4 rounded-2xl bg-[#1a232a] border border-brand-border/70 space-y-3 shadow-md"
+                        >
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                              <UserAvatar
+                                name={profileUser.full_name || profileUser.username}
+                                avatarUrl={profileUser.avatar_url}
+                                size="sm"
+                              />
+                              <div>
+                                <h4 className="text-xs font-bold text-white">{profileUser.full_name}</h4>
+                                <span className="text-[10px] text-gray-400">
+                                  {new Date(post.created_at).toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' })}
+                                </span>
+                              </div>
+                            </div>
+
+                            <div className="flex items-center gap-2">
+                              <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full flex items-center gap-1 ${
+                                post.privacy === 'friends'
+                                  ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
+                                  : 'bg-blue-500/10 text-blue-400 border border-blue-500/20'
+                              }`}>
+                                {post.privacy === 'friends' ? (
+                                  <>
+                                    <Users className="w-3 h-3" />
+                                    <span>{lang === 'bn' ? 'শুধু বন্ধুরা' : 'Friends'}</span>
+                                  </>
+                                ) : (
+                                  <>
+                                    <Globe className="w-3 h-3" />
+                                    <span>{lang === 'bn' ? 'পাবলিক' : 'Public'}</span>
+                                  </>
+                                )}
                               </span>
+
+                              {(isSelf || currentUser?.is_admin) && (
+                                <button
+                                  type="button"
+                                  onClick={() => handleDeleteProfilePost(post.id)}
+                                  title={lang === 'bn' ? 'পোস্ট ডিলিট করুন' : 'Delete Post'}
+                                  className="p-1 rounded-lg bg-red-500/10 hover:bg-red-500/25 text-red-400 transition-colors"
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                </button>
+                              )}
                             </div>
                           </div>
 
-                          <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full flex items-center gap-1 ${
-                            post.privacy === 'friends'
-                              ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
-                              : 'bg-blue-500/10 text-blue-400 border border-blue-500/20'
-                          }`}>
-                            {post.privacy === 'friends' ? (
-                              <>
-                                <Users className="w-3 h-3" />
-                                <span>{lang === 'bn' ? 'শুধু বন্ধুরা' : 'Friends'}</span>
-                              </>
-                            ) : (
-                              <>
-                                <Globe className="w-3 h-3" />
-                                <span>{lang === 'bn' ? 'পাবলিক' : 'Public'}</span>
-                              </>
-                            )}
-                          </span>
-                        </div>
+                          <p className="text-xs text-gray-200 whitespace-pre-wrap leading-relaxed">
+                            {post.content}
+                          </p>
 
-                        <p className="text-xs text-gray-200 whitespace-pre-wrap leading-relaxed">
-                          {post.content}
-                        </p>
+                          {post.media_url && (
+                            <div className="rounded-xl overflow-hidden max-h-60 border border-brand-border/50">
+                              <img src={post.media_url} alt="" className="w-full h-full object-cover" />
+                            </div>
+                          )}
 
-                        {post.media_url && (
-                          <div className="rounded-xl overflow-hidden max-h-60 border border-brand-border/50">
-                            <img src={post.media_url} alt="" className="w-full h-full object-cover" />
+                          <div className="pt-2 border-t border-brand-border/40 flex items-center justify-between text-xs text-gray-400">
+                            <button
+                              onClick={() => handleLikePost(post.id)}
+                              className="flex items-center gap-1.5 hover:text-red-400 transition-colors font-semibold"
+                            >
+                              <Heart className="w-4 h-4 text-red-400 fill-current" />
+                              <span>{post.likes_count}</span>
+                            </button>
                           </div>
-                        )}
-
-                        <div className="pt-2 border-t border-brand-border/40 flex items-center justify-between text-xs text-gray-400">
-                          <button
-                            onClick={() => handleLikePost(post.id)}
-                            className="flex items-center gap-1.5 hover:text-red-400 transition-colors font-semibold"
-                          >
-                            <Heart className="w-4 h-4 text-red-400 fill-current" />
-                            <span>{post.likes_count}</span>
-                          </button>
                         </div>
-                      </div>
-                    ))}
-                  </div>
-                )
+                      ))}
+                    </div>
+                  )}
+                </div>
               )}
             </div>
           </>

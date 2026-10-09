@@ -2,7 +2,7 @@ from datetime import datetime, timezone, timedelta
 from typing import List
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, and_, desc
+from sqlalchemy import select, and_, desc, delete
 from sqlalchemy.orm import selectinload
 
 from app.core.database import get_db
@@ -117,6 +117,7 @@ async def delete_status(
     if s.user_id != current_user.id and not current_user.is_admin:
         raise HTTPException(status_code=403, detail="Cannot delete someone else's status")
 
+    await db.execute(delete(StatusView).where(StatusView.status_id == status_id))
     await db.delete(s)
     await db.commit()
-    return {"message": "Status deleted"}
+    return {"message": "Status deleted", "id": status_id}

@@ -1,13 +1,13 @@
 from typing import List
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, or_, and_, delete
+from sqlalchemy import select, or_, and_, delete, update
 
 from app.core.database import get_db
 from app.core.security import get_current_user
 from app.models.models import (
     User, Friendship, Post, CallRecord, Report, Status, StatusView,
-    MessageReaction, Message, ConversationMember
+    MessageReaction, Message, ConversationMember, Conversation
 )
 from app.schemas.schemas import UserResponse, UserUpdate
 
@@ -112,39 +112,79 @@ async def delete_my_account(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    """Permanently delete current user account and all associated personal data"""
-    user_id = current_user.id
+    """Permanently delete current user account and all associated personal data safely"""
+    try:
+        user_id = current_user.id
 
-    # 1. Delete friendships
-    await db.execute(
-        delete(Friendship).where(
-            or_(Friendship.requester_id == user_id, Friendship.receiver_id == user_id)
+        # 1. Nullify created_by on any conversations created by this user
+        await db.execute(
+            update(Conversation).where(Conversation.created_by == user_id).values(created_by=None)
         )
-    )
-    # 2. Delete timeline posts
-    await db.execute(delete(Post).where(Post.user_id == user_id))
-    # 3. Delete calls
-    await db.execute(
-        delete(CallRecord).where(
-            or_(CallRecord.caller_id == user_id, CallRecord.receiver_id == user_id)
+
+        # 2. Nullify reply_to_id on any messages where reply points to a message of this user
+        user_msg_subquery = select(Message.id).where(Message.sender_id == user_id)
+        await db.execute(
+            update(Message).where(Message.reply_to_id.in_(user_msg_subquery)).values(reply_to_id=None)
         )
-    )
-    # 4. Delete reports
-    await db.execute(
-        delete(Report).where(
-            or_(Report.reporter_id == user_id, Report.reported_user_id == user_id)
+
+        # 3. Delete status views on this user's statuses AND status views by this user
+        user_status_subquery = select(Status.id).where(Status.user_id == user_id)
+        await db.execute(
+            delete(StatusView).where(
+                or_(
+                    StatusView.viewer_id == user_id,
+                    StatusView.status_id.in_(user_status_subquery)
+                )
+            )
         )
-    )
-    # 5. Delete statuses and views
-    await db.execute(delete(StatusView).where(StatusView.viewer_id == user_id))
-    await db.execute(delete(Status).where(Status.user_id == user_id))
-    # 6. Delete message reactions
-    await db.execute(delete(MessageReaction).where(MessageReaction.user_id == user_id))
-    # 7. Delete messages & memberships
-    await db.execute(delete(Message).where(Message.sender_id == user_id))
-    await db.execute(delete(ConversationMember).where(ConversationMember.user_id == user_id))
-    # 8. Delete user record
-    await db.delete(current_user)
-    await db.commit()
+        await db.execute(delete(Status).where(Status.user_id == user_id))
+
+        # 4. Delete message reactions on this user's messages AND reactions by this user
+        await db.execute(
+            delete(MessageReaction).where(
+                or_(
+                    MessageReaction.user_id == user_id,
+                    MessageReaction.message_id.in_(user_msg_subquery)
+                )
+            )
+        )
+
+        # 5. Delete friendships
+        await db.execute(
+            delete(Friendship).where(
+                or_(Friendship.requester_id == user_id, Friendship.receiver_id == user_id)
+            )
+        )
+
+        # 6. Delete timeline posts
+        await db.execute(delete(Post).where(Post.user_id == user_id))
+
+        # 7. Delete calls
+        await db.execute(
+            delete(CallRecord).where(
+                or_(CallRecord.caller_id == user_id, CallRecord.receiver_id == user_id)
+            )
+        )
+
+        # 8. Delete reports
+        await db.execute(
+            delete(Report).where(
+                or_(Report.reporter_id == user_id, Report.reported_user_id == user_id)
+            )
+        )
+
+        # 9. Delete messages & memberships
+        await db.execute(delete(Message).where(Message.sender_id == user_id))
+        await db.execute(delete(ConversationMember).where(ConversationMember.user_id == user_id))
+
+        # 10. Delete user record
+        await db.delete(current_user)
+        await db.commit()
+    except Exception as e:
+        await db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to delete account: {str(e)}"
+        )
 
     return {"message": "Account permanently deleted", "status": "success"}

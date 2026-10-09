@@ -59,7 +59,6 @@ export function ChatList({
   const { user } = useAuth();
   const { t, lang } = useLanguage();
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedTopic, setSelectedTopic] = useState('all');
   const [showNewChatModal, setShowNewChatModal] = useState(false);
   const [showNewGroupModal, setShowNewGroupModal] = useState(false);
   const [availableUsers, setAvailableUsers] = useState<any[]>([]);
@@ -114,14 +113,6 @@ export function ChatList({
       setIsCreatingTestFriend(false);
     }
   };
-
-  const topics = [
-    { id: 'all', label: t.all },
-    { id: 'friends', label: t.topicFriends, icon: '☕' },
-    { id: 'study', label: t.topicStudy, icon: '📚' },
-    { id: 'work', label: t.topicWork, icon: '💼' },
-    { id: 'project', label: t.topicProject, icon: '🚀' },
-  ];
 
   const openNewChat = async () => {
     setShowNewChatModal(true);
@@ -178,19 +169,11 @@ export function ChatList({
   };
 
   const filteredConversations = conversations.filter((c) => {
+    if (!searchTerm) return true;
     const term = searchTerm.toLowerCase();
     const nameMatch = c.name?.toLowerCase().includes(term);
-    const msgMatch = c.last_message?.content.toLowerCase().includes(term);
-    const textMatches = nameMatch || msgMatch;
-    if (!textMatches) return false;
-
-    if (selectedTopic === 'all') return true;
-    const nameLower = (c.name || '').toLowerCase();
-    if (selectedTopic === 'study' && (nameLower.includes('study') || nameLower.includes('পড়া') || nameLower.includes('📚'))) return true;
-    if (selectedTopic === 'work' && (nameLower.includes('work') || nameLower.includes('কাজ') || nameLower.includes('💼'))) return true;
-    if (selectedTopic === 'project' && (nameLower.includes('project') || nameLower.includes('প্রজেক্ট') || nameLower.includes('🚀'))) return true;
-    if (selectedTopic === 'friends' && (nameLower.includes('friend') || nameLower.includes('বন্ধু') || nameLower.includes('☕') || c.type === 'direct')) return true;
-    return false;
+    const msgMatch = c.last_message?.content?.toLowerCase().includes(term);
+    return nameMatch || msgMatch;
   });
 
   const formatTimestamp = (iso?: string) => {
@@ -255,24 +238,6 @@ export function ChatList({
             className="w-full bg-[#202c33] text-white text-xs placeholder-gray-400 rounded-xl pl-9 pr-3 py-2 border border-brand-border focus:outline-none focus:border-brand-emerald transition-colors"
           />
         </div>
-      </div>
-
-      {/* Topic Filter Chips */}
-      <div className="px-3 py-2 border-b border-brand-border/40 flex items-center gap-1.5 overflow-x-auto scrollbar-none bg-[#111b21]/70">
-        {topics.map((topic) => (
-          <button
-            key={topic.id}
-            onClick={() => setSelectedTopic(topic.id)}
-            className={`px-3 py-1 rounded-xl text-[11px] font-semibold whitespace-nowrap transition-all flex items-center gap-1 ${
-              selectedTopic === topic.id
-                ? 'bg-brand-emerald text-brand-dark font-bold shadow-sm'
-                : 'bg-[#202c33] text-gray-400 hover:text-white hover:bg-[#2a3942]'
-            }`}
-          >
-            {topic.icon && <span>{topic.icon}</span>}
-            <span>{topic.label}</span>
-          </button>
-        ))}
       </div>
 
       {/* Conversation List */}

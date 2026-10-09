@@ -175,6 +175,7 @@ export const api = {
   createStatus: (data: { media_url?: string; media_type: string; caption?: string; background_color?: string }) =>
     request('/statuses', { method: 'POST', body: JSON.stringify(data) }),
   viewStatus: (statusId: string) => request(`/statuses/${statusId}/view`, { method: 'POST' }),
+  deleteStatus: (statusId: string) => request(`/statuses/${statusId}`, { method: 'DELETE' }),
 
   // Calls
   getCallHistory: () => request('/calls/history'),
@@ -239,5 +240,6 @@ export const api = {
   createPost: (data: { content: string; media_url?: string; privacy?: string }) =>
     request('/posts', { method: 'POST', body: JSON.stringify(data) }),
   likePost: (postId: string) => request(`/posts/${postId}/like`, { method: 'POST' }),
+  deletePost: (postId: string) => request(`/posts/${postId}`, { method: 'DELETE' }),
   getUserPosts: (userId: string) => request(`/posts/user/${userId}`),
 };

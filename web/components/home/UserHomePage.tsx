@@ -19,7 +19,8 @@ import {
   Sparkles,
   CheckCircle2,
   Clock,
-  MoreHorizontal
+  MoreHorizontal,
+  Trash2
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useLanguage } from '@/lib/i18n';
@@ -153,6 +154,18 @@ export function UserHomePage({
       );
       await api.likePost(postId);
     } catch (err) {}
+  };
+
+  const handleDeletePost = async (postId: string) => {
+    if (!window.confirm(lang === 'bn' ? '⚠️ আপনি কি নিশ্চিত যে আপনি এই পোস্টটি মুছে ফেলতে চান?' : 'Are you sure you want to delete this post?')) {
+      return;
+    }
+    try {
+      await api.deletePost(postId);
+      setPosts((prev) => prev.filter((p) => p.id !== postId));
+    } catch (err: any) {
+      alert(err.message || (lang === 'bn' ? 'পোস্ট ডিলিট করা যায়নি' : 'Failed to delete post'));
+    }
   };
 
   return (
@@ -394,16 +407,30 @@ export function UserHomePage({
                         </div>
                       </div>
 
-                      {/* Direct Chat with author shortcut */}
-                      {post.author.id !== user?.id && (
-                        <button
-                          onClick={() => onStartChat(post.author.id)}
-                          className="px-3 py-1.5 rounded-xl bg-brand-emerald/10 hover:bg-brand-emerald text-brand-emerald hover:text-brand-dark font-bold text-xs flex items-center gap-1 transition-all"
-                        >
-                          <MessageCircle className="w-3.5 h-3.5" />
-                          <span>{lang === 'bn' ? 'মেসেজ' : 'Message'}</span>
-                        </button>
-                      )}
+                      <div className="flex items-center gap-1.5">
+                        {/* Direct Chat with author shortcut */}
+                        {post.author.id !== user?.id && (
+                          <button
+                            onClick={() => onStartChat(post.author.id)}
+                            className="px-3 py-1.5 rounded-xl bg-brand-emerald/10 hover:bg-brand-emerald text-brand-emerald hover:text-brand-dark font-bold text-xs flex items-center gap-1 transition-all"
+                          >
+                            <MessageCircle className="w-3.5 h-3.5" />
+                            <span>{lang === 'bn' ? 'মেসেজ' : 'Message'}</span>
+                          </button>
+                        )}
+
+                        {/* Delete post button */}
+                        {(post.author.id === user?.id || user?.is_admin) && (
+                          <button
+                            type="button"
+                            onClick={() => handleDeletePost(post.id)}
+                            title={lang === 'bn' ? 'পোস্ট ডিলিট করুন' : 'Delete Post'}
+                            className="p-1.5 rounded-xl bg-red-500/10 hover:bg-red-500/25 text-red-400 transition-all active:scale-95"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        )}
+                      </div>
                     </div>
 
                     {/* Post Content */}

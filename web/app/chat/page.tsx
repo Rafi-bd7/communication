@@ -743,6 +743,10 @@ export default function ChatPage() {
       <StatusViewerModal
         status={activeStoryViewer}
         onClose={() => setActiveStoryViewer(null)}
+        onStatusDeleted={(deletedId) => {
+          setStatuses((prev) => prev.filter((s) => s.id !== deletedId));
+          setActiveStoryViewer(null);
+        }}
       />
 
       {/* Create Story Modal */}

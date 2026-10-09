@@ -168,3 +168,19 @@ async def get_user_posts(
         )
         for p in posts
     ]
+
+@router.delete("/{post_id}")
+async def delete_post(
+    post_id: str,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    post = await db.get(Post, post_id)
+    if not post:
+        raise HTTPException(status_code=404, detail="Post not found")
+    if post.user_id != current_user.id and not current_user.is_admin:
+        raise HTTPException(status_code=403, detail="Not authorized to delete this post")
+    await db.delete(post)
+    await db.commit()
+    return {"message": "Post deleted successfully", "id": post_id}
+

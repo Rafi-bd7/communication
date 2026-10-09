@@ -1,18 +1,22 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { X, Eye, ChevronLeft, ChevronRight } from 'lucide-react';
+import { X, Eye, ChevronLeft, ChevronRight, Trash2 } from 'lucide-react';
 import { StatusItem } from './StatusTray';
 import { api } from '@/lib/api';
+import { useAuth } from '@/hooks/useAuth';
 import UserAvatar from '@/components/common/UserAvatar';
 
 interface StatusViewerModalProps {
   status: StatusItem | null;
   onClose: () => void;
+  onStatusDeleted?: (statusId: string) => void;
 }
 
-export function StatusViewerModal({ status, onClose }: StatusViewerModalProps) {
+export function StatusViewerModal({ status, onClose, onStatusDeleted }: StatusViewerModalProps) {
+  const { user } = useAuth();
   const [progress, setProgress] = useState(0);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
     if (!status) return;
@@ -45,6 +49,24 @@ export function StatusViewerModal({ status, onClose }: StatusViewerModalProps) {
     };
   }, [status, onClose]);
 
+  const canDelete = status && (status.user_id === user?.id || status.user?.id === user?.id || user?.is_admin);
+
+  const handleDeleteStory = async () => {
+    if (!status) return;
+    if (!window.confirm('⚠️ আপনি কি নিশ্চিত যে আপনি এই স্টোরিটি মুছে ফেলতে চান?\nAre you sure you want to delete this story?')) {
+      return;
+    }
+    setIsDeleting(true);
+    try {
+      await api.deleteStatus(status.id);
+      if (onStatusDeleted) onStatusDeleted(status.id);
+      onClose();
+    } catch (err: any) {
+      alert(err.message || 'স্টোরি ডিলিট করতে ব্যর্থ হয়েছে / Failed to delete story');
+      setIsDeleting(false);
+    }
+  };
+
   if (!status) return null;
 
   return (
@@ -76,12 +98,25 @@ export function StatusViewerModal({ status, onClose }: StatusViewerModalProps) {
                 <p className="text-xs text-white/80 drop-shadow">24h Story Update</p>
               </div>
             </div>
-            <button
-              onClick={onClose}
-              className="w-9 h-9 rounded-full bg-black/40 hover:bg-black/60 flex items-center justify-center text-white transition-colors"
-            >
-              <X className="w-5 h-5" />
-            </button>
+            <div className="flex items-center gap-2">
+              {canDelete && (
+                <button
+                  type="button"
+                  onClick={handleDeleteStory}
+                  disabled={isDeleting}
+                  title="Delete Story / স্টোরি ডিলিট করুন"
+                  className="w-9 h-9 rounded-full bg-red-600/80 hover:bg-red-600 flex items-center justify-center text-white transition-colors shadow-lg active:scale-95 disabled:opacity-50"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              )}
+              <button
+                onClick={onClose}
+                className="w-9 h-9 rounded-full bg-black/40 hover:bg-black/60 flex items-center justify-center text-white transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
           </div>
         </div>
 
