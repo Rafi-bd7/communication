@@ -1,15 +1,15 @@
 import os
 import sys
 from pathlib import Path
-import uvicorn
 
-# Ensure the backend directory is in sys.path
-backend_dir = Path(__file__).resolve().parent
+# Add backend directory to sys.path
+backend_dir = Path(__file__).resolve().parent / "backend"
 if str(backend_dir) not in sys.path:
     sys.path.insert(0, str(backend_dir))
 
+import uvicorn
+
 if __name__ == "__main__":
-    # Render and cloud platforms pass the listening port in PORT environment variable
     port_str = os.environ.get("PORT", "8000")
     try:
         port = int(port_str)
