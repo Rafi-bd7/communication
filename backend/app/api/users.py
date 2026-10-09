@@ -1,11 +1,14 @@
 from typing import List
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, or_, and_
+from sqlalchemy import select, or_, and_, delete
 
 from app.core.database import get_db
 from app.core.security import get_current_user
-from app.models.models import User, Friendship
+from app.models.models import (
+    User, Friendship, Post, CallRecord, Report, Status, StatusView,
+    MessageReaction, Message, ConversationMember
+)
 from app.schemas.schemas import UserResponse, UserUpdate
 
 router = APIRouter(prefix="/users", tags=["users"])
@@ -92,3 +95,46 @@ async def update_profile(
     await db.commit()
     await db.refresh(current_user)
     return UserResponse.model_validate(current_user)
+
+@router.delete("/me")
+@router.delete("/account")
+async def delete_my_account(
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Permanently delete current user account and all associated personal data"""
+    user_id = current_user.id
+
+    # 1. Delete friendships
+    await db.execute(
+        delete(Friendship).where(
+            or_(Friendship.requester_id == user_id, Friendship.receiver_id == user_id)
+        )
+    )
+    # 2. Delete timeline posts
+    await db.execute(delete(Post).where(Post.user_id == user_id))
+    # 3. Delete calls
+    await db.execute(
+        delete(CallRecord).where(
+            or_(CallRecord.caller_id == user_id, CallRecord.receiver_id == user_id)
+        )
+    )
+    # 4. Delete reports
+    await db.execute(
+        delete(Report).where(
+            or_(Report.reporter_id == user_id, Report.reported_user_id == user_id)
+        )
+    )
+    # 5. Delete statuses and views
+    await db.execute(delete(StatusView).where(StatusView.viewer_id == user_id))
+    await db.execute(delete(Status).where(Status.user_id == user_id))
+    # 6. Delete message reactions
+    await db.execute(delete(MessageReaction).where(MessageReaction.user_id == user_id))
+    # 7. Delete messages & memberships
+    await db.execute(delete(Message).where(Message.sender_id == user_id))
+    await db.execute(delete(ConversationMember).where(ConversationMember.user_id == user_id))
+    # 8. Delete user record
+    await db.delete(current_user)
+    await db.commit()
+
+    return {"message": "Account permanently deleted", "status": "success"}

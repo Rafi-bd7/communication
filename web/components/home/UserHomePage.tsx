@@ -281,7 +281,7 @@ export function UserHomePage({
                   <input
                     type="file"
                     ref={fileInputRef}
-                    accept="image/*"
+                    accept="image/*,.heic,.heif,.jpg,.jpeg,.png,.webp"
                     onChange={handleSelectMedia}
                     className="hidden"
                   />

@@ -186,7 +186,7 @@ export function TimelineFeedDrawer({
                   <input
                     type="file"
                     ref={fileInputRef}
-                    accept="image/*"
+                    accept="image/*,.heic,.heif,.jpg,.jpeg,.png,.webp"
                     onChange={handleMediaUpload}
                     className="hidden"
                   />

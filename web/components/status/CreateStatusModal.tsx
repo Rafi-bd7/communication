@@ -144,7 +144,7 @@ export function CreateStatusModal({ isOpen, onClose, onCreated }: CreateStatusMo
                   <span className="text-xs text-gray-500">Supports PNG, JPG, MP4</span>
                   <input
                     type="file"
-                    accept="image/*,video/*"
+                    accept="image/*,video/*,.heic,.heif,.jpg,.jpeg,.png,.webp,.mov"
                     onChange={handleFileSelect}
                     className="hidden"
                   />

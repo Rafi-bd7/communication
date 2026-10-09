@@ -10,12 +10,12 @@ from app.models.models import User
 router = APIRouter(prefix="/media", tags=["media"])
 
 ALLOWED_EXTENSIONS = {
-    # Images
-    "png", "jpg", "jpeg", "gif", "webp", "svg",
-    # Audio
-    "mp3", "wav", "ogg", "webm", "m4a",
-    # Video
-    "mp4", "webm", "mov",
+    # Images (including iOS HEIC/HEIF and camera photos)
+    "png", "jpg", "jpeg", "gif", "webp", "svg", "heic", "heif", "avif", "jfif", "bmp", "tiff", "ico",
+    # Audio (including iOS voice memos/audio)
+    "mp3", "wav", "ogg", "webm", "m4a", "aac", "caf",
+    # Video (including iOS quicktime/MOV)
+    "mp4", "webm", "mov", "qt",
     # Documents
     "pdf", "doc", "docx", "txt", "zip"
 }
@@ -24,8 +24,31 @@ ALLOWED_EXTENSIONS = {
 async def upload_file(
     file: UploadFile = File(...)
 ):
-    orig_name = file.filename or "file"
-    ext = orig_name.split(".")[-1].lower() if "." in orig_name else "bin"
+    orig_name = file.filename or "photo.jpg"
+    
+    if "." in orig_name:
+        ext = orig_name.rsplit(".", 1)[-1].lower()
+    else:
+        # Auto-detect extension from content_type (common on iOS mobile uploads)
+        ct = (file.content_type or "").lower()
+        if "jpeg" in ct or "jpg" in ct:
+            ext = "jpg"
+        elif "png" in ct:
+            ext = "png"
+        elif "heic" in ct:
+            ext = "heic"
+        elif "heif" in ct:
+            ext = "heif"
+        elif "webp" in ct:
+            ext = "webp"
+        elif "image" in ct:
+            ext = "jpg"
+        elif "audio" in ct:
+            ext = "m4a"
+        elif "video" in ct:
+            ext = "mp4"
+        else:
+            ext = "jpg"
     
     if ext not in ALLOWED_EXTENSIONS:
         raise HTTPException(
@@ -47,11 +70,11 @@ async def upload_file(
 
     # Determine message type
     message_type = "file"
-    if ext in ["png", "jpg", "jpeg", "gif", "webp", "svg"]:
+    if ext in ["png", "jpg", "jpeg", "gif", "webp", "svg", "heic", "heif", "avif", "jfif", "bmp", "tiff", "ico"]:
         message_type = "image"
-    elif ext in ["mp3", "wav", "ogg", "webm", "m4a"]:
+    elif ext in ["mp3", "wav", "ogg", "webm", "m4a", "aac", "caf"]:
         message_type = "audio"
-    elif ext in ["mp4", "mov"]:
+    elif ext in ["mp4", "mov", "qt"]:
         message_type = "video"
 
     return {

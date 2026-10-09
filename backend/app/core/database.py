@@ -7,6 +7,10 @@ from app.core.config import settings
 engine_args = {}
 if "sqlite" in settings.DATABASE_URL:
     engine_args["connect_args"] = {"check_same_thread": False}
+else:
+    engine_args["pool_pre_ping"] = True
+    engine_args["pool_size"] = 10
+    engine_args["max_overflow"] = 20
 
 engine = create_async_engine(
     settings.DATABASE_URL,

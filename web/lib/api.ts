@@ -61,6 +61,7 @@ export const api = {
   searchUsers: (q: string) => request(`/users/search?q=${encodeURIComponent(q)}`),
   getUserProfile: (userId: string) => request(`/users/${userId}`),
   updateProfile: (data: any) => request('/users/profile', { method: 'PUT', body: JSON.stringify(data) }),
+  deleteMyAccount: () => request('/users/me', { method: 'DELETE' }),
 
   // Conversations
   getConversations: () => request('/conversations'),
@@ -87,9 +88,59 @@ export const api = {
 
   // Media
   uploadFile: async (file: File) => {
+    // Mobile / iPhone Image Optimizer: Converts HEIC/large images to standard web JPEG
+    let fileToUpload: File = file;
+    if (typeof window !== 'undefined' && (file.type.startsWith('image/') || file.name.match(/\.(jpe?g|png|webp|heic|heif|jfif|bmp)$/i))) {
+      try {
+        fileToUpload = await new Promise<File>((resolve) => {
+          const img = new Image();
+          const objectUrl = URL.createObjectURL(file);
+          img.onload = () => {
+            URL.revokeObjectURL(objectUrl);
+            const maxDim = 1920;
+            let { width, height } = img;
+            if (width > maxDim || height > maxDim) {
+              if (width > height) {
+                height = Math.round((height * maxDim) / width);
+                width = maxDim;
+              } else {
+                width = Math.round((width * maxDim) / height);
+                height = maxDim;
+              }
+            }
+            const canvas = document.createElement('canvas');
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            if (!ctx) return resolve(file);
+            ctx.drawImage(img, 0, 0, width, height);
+            canvas.toBlob(
+              (blob) => {
+                if (blob) {
+                  const cleanName = file.name.replace(/\.[^/.]+$/, '') + '.jpg';
+                  resolve(new File([blob], cleanName, { type: 'image/jpeg' }));
+                } else {
+                  resolve(file);
+                }
+              },
+              'image/jpeg',
+              0.88
+            );
+          };
+          img.onerror = () => {
+            URL.revokeObjectURL(objectUrl);
+            resolve(file);
+          };
+          img.src = objectUrl;
+        });
+      } catch {
+        fileToUpload = file;
+      }
+    }
+
     const token = getAuthToken();
     const formData = new FormData();
-    formData.append('file', file);
+    formData.append('file', fileToUpload);
 
     const headers: Record<string, string> = {};
     if (token) headers['Authorization'] = `Bearer ${token}`;

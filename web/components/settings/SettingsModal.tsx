@@ -18,7 +18,9 @@ import {
   Laptop,
   Camera,
   Upload,
-  Palette
+  Palette,
+  Trash2,
+  AlertTriangle
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useLanguage } from '@/lib/i18n';
@@ -31,7 +33,7 @@ interface SettingsModalProps {
 }
 
 export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
-  const { user, updateUser } = useAuth();
+  const { user, updateUser, logout } = useAuth();
   const { t, lang, setLanguage } = useLanguage();
   const { theme, toggleTheme } = useTheme();
 
@@ -45,6 +47,27 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   const [phone, setPhone] = useState(user?.phone || '');
   const [isSaving, setIsSaving] = useState(false);
   const [savedSuccess, setSavedSuccess] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const handleDeleteAccount = async () => {
+    const confirmPrompt = lang === 'bn'
+      ? '⚠️ আপনি কি নিশ্চিত যে আপনি আপনার আইডি সম্পূর্ণভাবে ডিলিট করতে চান?\n\nডিলিট করলে আপনার প্রোফাইল, সমস্ত বার্তা, কল এবং পোস্ট চিরতরে মুছে যাবে। এই কাজটি আর ফিরিয়ে আনা সম্ভব হবে না!'
+      : '⚠️ Are you sure you want to permanently delete your account?\n\nAll your messages, posts, calls, and profile data will be permanently wiped. This action CANNOT be undone!';
+
+    if (!window.confirm(confirmPrompt)) return;
+
+    setIsDeleting(true);
+    try {
+      await api.deleteMyAccount();
+      alert(lang === 'bn' ? 'আপনার আইডি সফলভাবে মুছে ফেলা হয়েছে।' : 'Your account has been deleted successfully.');
+      onClose();
+      logout();
+      window.location.href = '/register';
+    } catch (err: any) {
+      alert(err.message || (lang === 'bn' ? 'আইডি মুছতে ব্যর্থ হয়েছে।' : 'Failed to delete account.'));
+      setIsDeleting(false);
+    }
+  };
 
   const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -149,7 +172,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
               <input
                 type="file"
                 ref={avatarInputRef}
-                accept="image/*"
+                accept="image/*,.heic,.heif,.jpg,.jpeg,.png,.webp"
                 onChange={handlePhotoUpload}
                 className="hidden"
               />
@@ -251,6 +274,30 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                 </button>
               </div>
             </form>
+
+            {/* Account Deletion / Danger Zone */}
+            <div className="p-5 border-t border-brand-border/60 bg-red-500/5">
+              <div className="p-4 rounded-2xl bg-[#1a1215] border border-red-500/30 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                <div>
+                  <h5 className="font-bold text-xs text-red-400 flex items-center gap-1.5">
+                    <Trash2 className="w-3.5 h-3.5" />
+                    <span>{lang === 'bn' ? 'অ্যাকাউন্ট মুছে ফেলুন' : 'Delete Account'}</span>
+                  </h5>
+                  <p className="text-[11px] text-gray-400 mt-0.5">
+                    {lang === 'bn' ? 'আপনার আইডি ও সমস্ত তথ্য চিরতরে ডিলিট করতে চান?' : 'Permanently remove your account and all data'}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleDeleteAccount}
+                  disabled={isDeleting}
+                  className="px-3.5 py-2 rounded-xl bg-red-600 hover:bg-red-700 text-white font-bold text-xs flex items-center gap-1.5 shadow transition-all active:scale-95 flex-shrink-0 disabled:opacity-50"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                  <span>{isDeleting ? (lang === 'bn' ? 'মুছে ফেলা হচ্ছে...' : 'Deleting...') : (lang === 'bn' ? 'আইডি ডিলিট করুন' : 'Delete Account')}</span>
+                </button>
+              </div>
+            </div>
           </div>
         )}
 
@@ -427,6 +474,28 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                     ? 'আড্ডা আপনার গোপনীয়তাকে সর্বোচ্চ অগ্রাধিকার দেয়। আপনার ডেটা সুরক্ষিত ও এনক্রিপ্ট করা।'
                     : 'Adda prioritizes your privacy. Your communications and personal data are strictly secured.'}
                 </p>
+              </div>
+
+              {/* Account Deletion Option */}
+              <div className="p-4 rounded-2xl bg-red-500/10 border border-red-500/30 space-y-2 mt-2">
+                <div className="flex items-center gap-2 text-red-400 font-bold text-xs">
+                  <Trash2 className="w-4 h-4" />
+                  <span>{lang === 'bn' ? 'অ্যাকাউন্ট স্থায়ীভাবে ডিলিট করুন' : 'Permanently Delete Account'}</span>
+                </div>
+                <p className="text-[11px] text-gray-300 leading-relaxed">
+                  {lang === 'bn'
+                    ? 'আপনি যদি আর এই আইডি চালাতে না চান, তবে এখান থেকে সরাসরি অ্যাকাউন্ট ডিলিট করতে পারেন। এতে আপনার প্রোফাইল ও সমস্ত তথ্য চিরতরে মুছে যাবে।'
+                    : 'If you no longer wish to keep your account, you can permanently delete it here.'}
+                </p>
+                <button
+                  type="button"
+                  onClick={handleDeleteAccount}
+                  disabled={isDeleting}
+                  className="px-4 py-2 rounded-xl bg-red-600 hover:bg-red-700 text-white font-extrabold text-xs flex items-center gap-1.5 shadow active:scale-95 transition-all mt-1 disabled:opacity-50"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                  <span>{isDeleting ? (lang === 'bn' ? 'মুছে ফেলা হচ্ছে...' : 'Deleting...') : (lang === 'bn' ? 'আমার আইডি ডিলিট করুন' : 'Delete My Account')}</span>
+                </button>
               </div>
             </div>
           </div>

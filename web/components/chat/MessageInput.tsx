@@ -155,7 +155,7 @@ export function MessageInput({ onSendMessage, replyingTo, onCancelReply, onTypin
             <span className="text-gray-200">Photos & Videos</span>
             <input
               type="file"
-              accept="image/*,video/*"
+              accept="image/*,video/*,.heic,.heif,.jpg,.jpeg,.png,.webp,.mov"
               onChange={handleFileUploaded}
               className="hidden"
             />

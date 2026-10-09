@@ -1,7 +1,7 @@
 from datetime import datetime, timezone
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, or_
+from sqlalchemy import select, or_, func
 
 from app.core.database import get_db
 from app.core.security import get_password_hash, verify_password, create_access_token, get_current_user
@@ -12,9 +12,17 @@ router = APIRouter(prefix="/auth", tags=["auth"])
 
 @router.post("/register", response_model=TokenResponse)
 async def register(user_in: UserCreate, db: AsyncSession = Depends(get_db)):
-    # Check if username or email already exists
+    username_clean = user_in.username.strip()
+    email_clean = user_in.email.strip().lower()
+
+    # Check if username or email already exists (case-insensitive)
     existing = await db.execute(
-        select(User).where(or_(User.username == user_in.username, User.email == user_in.email))
+        select(User).where(
+            or_(
+                func.lower(User.username) == username_clean.lower(),
+                func.lower(User.email) == email_clean
+            )
+        )
     )
     if existing.scalar_one_or_none():
         raise HTTPException(
@@ -23,13 +31,13 @@ async def register(user_in: UserCreate, db: AsyncSession = Depends(get_db)):
         )
     
     # Hash password and create user
-    hashed = get_password_hash(user_in.password)
+    hashed = get_password_hash(user_in.password.strip())
     user = User(
-        username=user_in.username,
-        email=user_in.email,
-        phone=user_in.phone,
+        username=username_clean,
+        email=email_clean,
+        phone=user_in.phone.strip() if user_in.phone else None,
         hashed_password=hashed,
-        full_name=user_in.full_name,
+        full_name=user_in.full_name.strip(),
         avatar_url=user_in.avatar_url,
         bio=user_in.bio or "Hey there! I am using Adda."
     )
@@ -46,17 +54,23 @@ async def register(user_in: UserCreate, db: AsyncSession = Depends(get_db)):
 
 @router.post("/login", response_model=TokenResponse)
 async def login(credentials: UserLogin, db: AsyncSession = Depends(get_db)):
-    # Search by email or username
+    clean_identifier = credentials.username_or_email.strip().lower()
+    clean_password = credentials.password.strip()
+
+    # Search by email or username (case-insensitive)
     stmt = select(User).where(
         or_(
-            User.email == credentials.username_or_email,
-            User.username == credentials.username_or_email
+            func.lower(User.email) == clean_identifier,
+            func.lower(User.username) == clean_identifier
         )
     )
     result = await db.execute(stmt)
     user = result.scalar_one_or_none()
 
-    if not user or not verify_password(credentials.password, user.hashed_password):
+    if not user or not (
+        verify_password(credentials.password, user.hashed_password) or
+        verify_password(clean_password, user.hashed_password)
+    ):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect username/email or password"
