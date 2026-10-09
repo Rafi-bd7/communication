@@ -51,15 +51,8 @@ async def lifespan(app: FastAPI):
                 avatar_url=None
             )
             session.add(admin_user)
-            logger.info("Admin account initialized (username: admin, password: admin123)")
-
-        # Ensure posts table has privacy column if created earlier
-        try:
-            from sqlalchemy import text
-            await session.execute(text("ALTER TABLE posts ADD COLUMN privacy VARCHAR(20) DEFAULT 'public'"))
             await session.commit()
-        except Exception:
-            pass
+            logger.info("Admin account initialized (username: admin, password: admin123)")
 
     yield
     logger.info("Shutting down Adda communication platform backend...")
