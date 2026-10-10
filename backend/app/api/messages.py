@@ -106,7 +106,7 @@ async def send_message(
     conv_res = await db.execute(select(Conversation).where(Conversation.id == conversation_id))
     conv = conv_res.scalar_one_or_none()
     if conv:
-        conv.updated_at = datetime.now(timezone.utc)
+        conv.updated_at = datetime.now(timezone.utc).replace(tzinfo=None)
 
     await db.commit()
     await db.refresh(msg)
@@ -180,7 +180,7 @@ async def edit_message(
 
     msg.content = body.content
     msg.is_edited = True
-    msg.edited_at = datetime.now(timezone.utc)
+    msg.edited_at = datetime.now(timezone.utc).replace(tzinfo=None)
     await db.commit()
 
     member_ids = await get_conversation_member_ids(db, msg.conversation_id)

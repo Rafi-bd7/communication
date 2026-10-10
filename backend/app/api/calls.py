@@ -65,7 +65,7 @@ async def initiate_call(
         conversation_id=body.conversation_id,
         call_type=body.call_type,
         status="ringing",
-        started_at=datetime.now(timezone.utc)
+        started_at=datetime.now(timezone.utc).replace(tzinfo=None)
     )
     db.add(call)
     await db.commit()
@@ -106,7 +106,7 @@ async def end_call(
     call = res.scalar_one_or_none()
     if call:
         call.status = status_reason
-        call.ended_at = datetime.now(timezone.utc)
+        call.ended_at = datetime.now(timezone.utc).replace(tzinfo=None)
         call.duration = duration
         await db.commit()
         

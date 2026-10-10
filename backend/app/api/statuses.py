@@ -17,7 +17,7 @@ async def get_active_statuses(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    now = datetime.now(timezone.utc)
+    now = datetime.now(timezone.utc).replace(tzinfo=None)
     stmt = (
         select(Status)
         .where(Status.expires_at > now)
@@ -55,7 +55,7 @@ async def create_status(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    now = datetime.now(timezone.utc)
+    now = datetime.now(timezone.utc).replace(tzinfo=None)
     expires = now + timedelta(hours=24)
 
     status_obj = Status(

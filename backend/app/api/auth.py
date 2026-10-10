@@ -141,7 +141,7 @@ async def login(credentials: UserLogin, db: AsyncSession = Depends(get_db)):
 
     # Update online status
     user.is_online = True
-    user.last_seen = datetime.now(timezone.utc)
+    user.last_seen = datetime.now(timezone.utc).replace(tzinfo=None)
     await db.commit()
     await db.refresh(user)
 
