@@ -299,7 +299,7 @@ export default function LoginPage() {
                       value={resetIdentifier}
                       onChange={(e) => setResetIdentifier(e.target.value)}
                       required
-                      placeholder={lang === 'bn' ? 'যেমন: user123, user@mail.com বা 017...' : 'e.g. user123, user@mail.com or +8801...'}
+                      placeholder=""
                       className="w-full bg-[#202c33] text-white text-xs rounded-xl pl-9 pr-3 py-2.5 border border-brand-border focus:outline-none focus:border-brand-emerald transition-colors"
                     />
                   </div>

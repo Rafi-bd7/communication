@@ -157,7 +157,7 @@ export default function RegisterPage() {
                 type="text"
                 value={formData.full_name}
                 onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
-                placeholder={lang === 'bn' ? 'যেমন: তানভীর আহমেদ' : 'e.g. Tanvir Ahmed'}
+                placeholder=""
                 required
                 className="w-full bg-[#202c33] text-white text-sm rounded-xl pl-10 pr-3.5 py-2.5 border border-[#2a3942] focus:outline-none focus:border-brand-emerald transition-colors"
               />
@@ -172,7 +172,7 @@ export default function RegisterPage() {
               type="text"
               value={formData.username}
               onChange={(e) => setFormData({ ...formData, username: e.target.value.toLowerCase().replace(/\s+/g, '') })}
-              placeholder={lang === 'bn' ? 'যেমন: tanvir24' : 'e.g. tanvir24'}
+              placeholder=""
               required
               className="w-full bg-[#202c33] text-white text-sm rounded-xl px-3.5 py-2.5 border border-[#2a3942] focus:outline-none focus:border-brand-emerald transition-colors"
             />
@@ -188,7 +188,7 @@ export default function RegisterPage() {
                 type="email"
                 value={formData.email}
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                placeholder={lang === 'bn' ? 'আপনার ইমেইল দিন' : 'you@example.com'}
+                placeholder=""
                 required
                 className="w-full bg-[#202c33] text-white text-sm rounded-xl pl-10 pr-3.5 py-2.5 border border-[#2a3942] focus:outline-none focus:border-brand-emerald transition-colors"
               />
@@ -205,7 +205,7 @@ export default function RegisterPage() {
                 type="password"
                 value={formData.password}
                 onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                placeholder="••••••••"
+                placeholder=""
                 required
                 minLength={6}
                 className="w-full bg-[#202c33] text-white text-sm rounded-xl pl-10 pr-3.5 py-2.5 border border-[#2a3942] focus:outline-none focus:border-brand-emerald transition-colors"
