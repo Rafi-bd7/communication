@@ -1,23 +1,32 @@
 import os
 from pathlib import Path
 from pydantic_settings import BaseSettings
+from pydantic import field_validator
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 UPLOAD_DIR = BASE_DIR / "uploads"
 UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 
-def _get_database_url() -> str:
+def normalize_database_url(raw: str | None) -> str:
     """Get and fix database URL for async SQLAlchemy compatibility."""
-    url = os.getenv(
-        "DATABASE_URL",
-        f"sqlite+aiosqlite:///{BASE_DIR / 'communication.db'}"
-    )
-    # Render provides postgres:// but SQLAlchemy async requires postgresql+asyncpg://
+    if not raw or not isinstance(raw, str) or not raw.strip():
+        return f"sqlite+aiosqlite:///{BASE_DIR / 'communication.db'}"
+
+    url = raw.strip().strip('"').strip("'")
+
+    # Render provides postgres:// or postgresql://
     if url.startswith("postgres://"):
         url = url.replace("postgres://", "postgresql+asyncpg://", 1)
-    # Also handle postgresql:// without asyncpg driver
-    elif url.startswith("postgresql://") and "+asyncpg" not in url:
-        url = url.replace("postgresql://", "postgresql+asyncpg://", 1)
+    elif url.startswith("postgresql://"):
+        if "+asyncpg" not in url and "+psycopg" not in url:
+            url = url.replace("postgresql://", "postgresql+asyncpg://", 1)
+
+    # Clean up sslmode if present for asyncpg
+    if "+asyncpg" in url and "sslmode=" in url:
+        url = url.replace("sslmode=require", "ssl=require").replace("sslmode=prefer", "")
+        if url.endswith("?"):
+            url = url[:-1]
+
     return url
 
 class Settings(BaseSettings):
@@ -28,7 +37,12 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 7  # 7 days
 
     # Dual database support: SQLite async by default, or PostgreSQL if DATABASE_URL provided
-    DATABASE_URL: str = _get_database_url()
+    DATABASE_URL: str = normalize_database_url(os.getenv("DATABASE_URL"))
+
+    @field_validator("DATABASE_URL", mode="before")
+    @classmethod
+    def validate_database_url(cls, v: str) -> str:
+        return normalize_database_url(v)
 
     CORS_ORIGINS: list[str] = [
         "http://localhost:3000",
