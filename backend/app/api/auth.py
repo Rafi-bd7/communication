@@ -102,7 +102,9 @@ async def login(credentials: UserLogin, db: AsyncSession = Depends(get_db)):
     clean_identifier = credentials.username_or_email.strip().lower()
     clean_password = credentials.password.strip()
 
-    # Search by email or username (case-insensitive)
+    clean_digits = "".join(filter(str.isdigit, credentials.username_or_email.strip()))
+
+    # Search by email, username (case-insensitive) or phone number
     stmt = select(User).where(
         or_(
             func.lower(User.email) == clean_identifier,
@@ -111,6 +113,16 @@ async def login(credentials: UserLogin, db: AsyncSession = Depends(get_db)):
     )
     result = await db.execute(stmt)
     user = result.scalar_one_or_none()
+
+    # If not found and identifier contains phone digits, search by phone
+    if not user and len(clean_digits) >= 6:
+        phone_res = await db.execute(select(User).where(User.phone.isnot(None)))
+        for u in phone_res.scalars().all():
+            if u.phone:
+                u_digits = "".join(filter(str.isdigit, u.phone))
+                if u_digits and (u_digits == clean_digits or u_digits.endswith(clean_digits[-8:]) or clean_digits.endswith(u_digits[-8:])):
+                    user = u
+                    break
 
     if not user or not (
         verify_password(credentials.password, user.hashed_password) or

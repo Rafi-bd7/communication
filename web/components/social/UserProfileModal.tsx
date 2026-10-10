@@ -492,22 +492,22 @@ export function UserProfileModal({
                     </button>
                   )}
 
-                  {/* Direct Chat Shortcut */}
-                  {onStartChat && (
+                  {/* Direct Chat Shortcut — only once friends */}
+                  {isFriends && onStartChat && (
                     <button
                       onClick={() => {
                         onStartChat(profileUser.id);
                         onClose();
                       }}
-                      className="px-3.5 py-2 rounded-xl bg-[#202c33] hover:bg-[#2a3942] text-white border border-brand-border font-bold text-xs shadow flex items-center gap-1.5 transition-all"
+                      className="px-3.5 py-2 rounded-xl bg-brand-emerald text-brand-dark font-extrabold text-xs shadow-md hover:brightness-110 flex items-center gap-1.5 transition-all active:scale-95"
                     >
-                      <MessageSquare className="w-3.5 h-3.5 text-brand-emerald" />
+                      <MessageSquare className="w-3.5 h-3.5" />
                       <span>{lang === 'bn' ? 'মেসেজ' : 'Message'}</span>
                     </button>
                   )}
 
-                  {/* Call Shortcuts (enabled for friends or direct) */}
-                  {onStartCall && (
+                  {/* Call Shortcuts — only once friends */}
+                  {isFriends && onStartCall && (
                     <>
                       <button
                         onClick={() => onStartCall(profileUser, 'voice')}

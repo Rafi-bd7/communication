@@ -40,11 +40,11 @@ export function DiscoverPeopleModal({
   const [copiedLink, setCopiedLink] = useState(false);
   const [activeTab, setActiveTab] = useState<'suggestions' | 'friends' | 'requests'>('suggestions');
 
-  const loadData = async () => {
+  const loadData = async (query?: string) => {
     setIsLoading(true);
     try {
       const [suggs, reqs, friends] = await Promise.all([
-        api.getFriendSuggestions().catch(() => []),
+        api.getFriendSuggestions(query).catch(() => []),
         api.getPendingRequests().catch(() => []),
         api.getMyFriends().catch(() => []),
       ]);

@@ -219,7 +219,8 @@ export const api = {
   getNetworkInfo: () => request('/system/network-info'),
 
   // Friends & Social Community (Facebook Features)
-  getFriendSuggestions: () => request('/friends/suggestions'),
+  getFriendSuggestions: (q?: string) =>
+    request(q ? `/friends/suggestions?q=${encodeURIComponent(q)}` : '/friends/suggestions'),
   sendFriendRequest: (userId: string) => request(`/friends/request/${userId}`, { method: 'POST' }),
   cancelFriendRequest: async (userId: string) => {
     try {

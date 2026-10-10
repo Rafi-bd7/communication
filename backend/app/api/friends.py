@@ -30,12 +30,22 @@ class FriendshipResponse(BaseModel):
 
 @router.get("/suggestions", response_model=List[FriendSuggestionResponse])
 async def get_friend_suggestions(
+    q: Optional[str] = None,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
     """Returns users to discover and connect with, along with friendship status"""
-    # Get all users except current user
-    users_stmt = select(User).where(User.id != current_user.id).order_by(User.created_at.desc()).limit(30)
+    users_stmt = select(User).where(User.id != current_user.id)
+    if q and q.strip():
+        term = f"%{q.strip().lower()}%"
+        users_stmt = users_stmt.where(
+            or_(
+                User.username.ilike(term),
+                User.full_name.ilike(term),
+                User.email.ilike(term)
+            )
+        )
+    users_stmt = users_stmt.order_by(User.created_at.desc()).limit(150)
     users_res = await db.execute(users_stmt)
     all_users = users_res.scalars().all()
 
