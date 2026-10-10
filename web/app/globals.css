@@ -6,9 +6,13 @@
    3D THEME SYSTEM: DARK OBSIDIAN CYBER & LIGHT CERAMIC NEUMORPHIC
    ══════════════════════════════════════════════════════════════════ */
 
-/* ── Dark Mode (Default) ────────────────────────────────────────── */
+/* ── Dark Mode (Default / Obsidian Cyber) ───────────────────────── */
 :root,
-html.dark-mode {
+html.dark,
+html.dark-mode,
+html[data-theme="dark"] {
+  color-scheme: dark;
+
   --background: #070d12;
   --foreground: #e9edef;
   --surface: #0e171f;
@@ -26,7 +30,7 @@ html.dark-mode {
   --scrollbar: #1e2e3a;
   --scrollbar-hover: #2b3e4d;
 
-  /* 3D Shadows & Depth */
+  /* 3D Obsidian Depth */
   --shadow-3d-base: 0 10px 30px -5px rgba(0, 0, 0, 0.7), 0 4px 12px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.12);
   --shadow-3d-floating: 0 20px 40px -10px rgba(0, 0, 0, 0.8), 0 8px 16px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.15);
   --shadow-3d-button: 0 4px 0 #007a5f, 0 8px 18px rgba(0, 208, 156, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.35);
@@ -35,32 +39,36 @@ html.dark-mode {
   --shadow-3d-inset: inset 0 2px 6px rgba(0, 0, 0, 0.65), 0 1px 0 rgba(255, 255, 255, 0.06);
 }
 
-/* ── Light Mode (3D Neumorphic / Ceramic) ───────────────────────── */
-html.light-mode {
-  --background: #edf1f7;
+/* ── Light Mode (Ceramic Neumorphic 3D) ─────────────────────────── */
+html.light,
+html.light-mode,
+html[data-theme="light"] {
+  color-scheme: light;
+
+  --background: #f0f4f8;
   --foreground: #0f172a;
   --surface: #ffffff;
-  --surface-2: #f1f4f9;
+  --surface-2: #f1f5f9;
   --surface-3: #e2e8f0;
   --border: #cbd5e1;
   --border-light: rgba(255, 255, 255, 0.9);
   --text-primary: #0f172a;
-  --text-secondary: #475569;
+  --text-secondary: #334155;
   --text-muted: #64748b;
   --brand: #00a884;
   --brand-glow: rgba(0, 168, 132, 0.3);
-  --bubble-out: #d8f7d0;
+  --bubble-out: #d9fdd3;
   --bubble-in: #ffffff;
   --scrollbar: #cbd5e1;
   --scrollbar-hover: #94a3b8;
 
-  /* 3D Shadows & Depth: Dual-Tone Neumorphic */
-  --shadow-3d-base: 8px 8px 20px rgba(165, 178, 198, 0.55), -8px -8px 20px rgba(255, 255, 255, 0.95), inset 0 1px 0 rgba(255, 255, 255, 0.9);
-  --shadow-3d-floating: 12px 16px 32px rgba(165, 178, 198, 0.65), -10px -10px 28px rgba(255, 255, 255, 1), inset 0 1px 0 rgba(255, 255, 255, 0.95);
+  /* 3D Ceramic Neumorphic Shadows */
+  --shadow-3d-base: 6px 6px 18px rgba(160, 175, 195, 0.35), -6px -6px 18px rgba(255, 255, 255, 0.95), inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  --shadow-3d-floating: 10px 14px 28px rgba(140, 155, 180, 0.3), -8px -8px 24px rgba(255, 255, 255, 0.95), inset 0 1px 0 #ffffff;
   --shadow-3d-button: 0 4px 0 #007a5f, 0 8px 16px rgba(0, 168, 132, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.45);
   --shadow-3d-button-press: 0 1px 0 #007a5f, 0 2px 6px rgba(0, 168, 132, 0.2);
-  --shadow-3d-secondary-btn: 4px 4px 10px rgba(165, 178, 198, 0.45), -4px -4px 10px rgba(255, 255, 255, 0.9), inset 0 1px 0 rgba(255, 255, 255, 0.85);
-  --shadow-3d-inset: inset 3px 3px 7px rgba(165, 178, 198, 0.5), inset -3px -3px 7px rgba(255, 255, 255, 0.85);
+  --shadow-3d-secondary-btn: 3px 3px 8px rgba(160, 175, 195, 0.35), -3px -3px 8px rgba(255, 255, 255, 0.95), inset 0 1px 0 #ffffff;
+  --shadow-3d-inset: inset 2px 2px 5px rgba(160, 175, 195, 0.35), inset -2px -2px 5px rgba(255, 255, 255, 0.9);
 }
 
 /* ── Base Setup ─────────────────────────────────────────────────── */
@@ -70,14 +78,14 @@ html {
 }
 
 body {
-  color: var(--text-primary);
-  background: var(--background);
+  color: var(--foreground);
+  background-color: var(--background);
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Inter', 'Helvetica Neue', Arial, sans-serif;
   min-height: 100vh;
   width: 100%;
   overflow-x: hidden;
   user-select: none;
-  transition: background-color 0.3s cubic-bezier(0.4, 0, 0.2, 1), color 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: background-color 0.25s ease, color 0.25s ease;
 }
 
 /* ── 3D Visual Depth Utility Classes ────────────────────────────── */
@@ -136,65 +144,279 @@ body {
   box-shadow: var(--shadow-3d-inset), 0 0 0 2px var(--brand-glow);
 }
 
-/* 3D Embossed Avatar with Luminous Rim */
+/* 3D Embossed Avatar */
 .avatar-3d {
-  box-shadow: 0 8px 18px -4px rgba(0, 0, 0, 0.45), inset 0 1px 1px rgba(255, 255, 255, 0.25);
+  box-shadow: 0 6px 14px -3px rgba(0, 0, 0, 0.35), inset 0 1px 1px rgba(255, 255, 255, 0.3);
   transition: transform 0.2s ease;
 }
 
 .avatar-3d:hover {
-  transform: scale(1.06);
+  transform: scale(1.05);
 }
 
-/* 3D Floating Glass Bevels */
-.bevel-top {
-  border-top: 1px solid var(--border-light);
+/* ══════════════════════════════════════════════════════════════════
+   LIGHT MODE: 100% COMPLETE HIGH-CONTRAST NEUMORPHIC OVERRIDES
+   ══════════════════════════════════════════════════════════════════ */
+
+/* Background Surfaces */
+html.light [class*="bg-[#0b141a]"],
+html.light-mode [class*="bg-[#0b141a]"],
+html[data-theme="light"] [class*="bg-[#0b141a]"] {
+  background-color: var(--background) !important;
 }
 
-/* ── Light Mode Automatic Adaptations ───────────────────────────── */
-html.light-mode .bg-\[#0b141a\] { background-color: var(--background) !important; }
-html.light-mode .bg-\[#111b21\] { background-color: var(--surface) !important; box-shadow: 4px 0 15px rgba(0,0,0,0.03); }
-html.light-mode .bg-\[#202c33\] { background-color: var(--surface-2) !important; }
-html.light-mode .bg-\[#182229\] { background-color: var(--surface-2) !important; }
-html.light-mode .bg-\[#2a3942\] { background-color: var(--surface-3) !important; }
-html.light-mode .bg-brand-dark { background-color: var(--surface) !important; }
-html.light-mode .bg-brand-surface { background-color: var(--surface) !important; }
+html.light [class*="bg-[#111b21]"],
+html.light-mode [class*="bg-[#111b21]"],
+html[data-theme="light"] [class*="bg-[#111b21]"] {
+  background-color: #ffffff !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+}
 
-html.light-mode .text-white { color: var(--text-primary) !important; }
-html.light-mode .text-gray-300 { color: #1e293b !important; }
-html.light-mode .text-gray-400 { color: #475569 !important; }
-html.light-mode .text-gray-500 { color: #64748b !important; }
-html.light-mode .text-\[#e9edef\] { color: var(--text-primary) !important; }
+html.light [class*="bg-[#202c33]"],
+html.light-mode [class*="bg-[#202c33]"],
+html[data-theme="light"] [class*="bg-[#202c33]"] {
+  background-color: #f1f5f9 !important;
+}
 
-html.light-mode .border-brand-border { border-color: var(--border) !important; }
-html.light-mode .border-\[#2a3942\] { border-color: var(--border) !important; }
+html.light [class*="bg-[#182229]"],
+html.light-mode [class*="bg-[#182229]"],
+html[data-theme="light"] [class*="bg-[#182229]"] {
+  background-color: #eef2f6 !important;
+}
 
-/* Light Mode Chat Bubbles */
-html.light-mode .bg-\[#005c4b\],
-html.light-mode .bg-brand-bubbleOutgoing {
-  background: linear-gradient(135deg, #dcf8c6 0%, #c4f3ad 100%) !important;
+html.light [class*="bg-[#2a3942]"],
+html.light-mode [class*="bg-[#2a3942]"],
+html[data-theme="light"] [class*="bg-[#2a3942]"] {
+  background-color: #e2e8f0 !important;
+}
+
+html.light [class*="bg-[#0e171f]"],
+html.light-mode [class*="bg-[#0e171f]"],
+html[data-theme="light"] [class*="bg-[#0e171f]"] {
+  background-color: #ffffff !important;
+}
+
+html.light [class*="bg-[#16222b]"],
+html.light-mode [class*="bg-[#16222b]"],
+html[data-theme="light"] [class*="bg-[#16222b]"] {
+  background-color: #f8fafc !important;
+}
+
+html.light [class*="bg-[#1e2e3a]"],
+html.light-mode [class*="bg-[#1e2e3a]"],
+html[data-theme="light"] [class*="bg-[#1e2e3a]"] {
+  background-color: #f1f5f9 !important;
+}
+
+html.light [class*="bg-[#141e26]"],
+html.light-mode [class*="bg-[#141e26]"],
+html[data-theme="light"] [class*="bg-[#141e26]"] {
+  background-color: #ffffff !important;
+}
+
+html.light [class*="bg-[#141d24]"],
+html.light-mode [class*="bg-[#141d24]"],
+html[data-theme="light"] [class*="bg-[#141d24]"] {
+  background-color: #e2e8f0 !important;
+}
+
+html.light [class*="bg-[#18242c]"],
+html.light-mode [class*="bg-[#18242c]"],
+html[data-theme="light"] [class*="bg-[#18242c]"] {
+  background-color: #f8fafc !important;
+}
+
+html.light [class*="bg-[#202f3a]"],
+html.light-mode [class*="bg-[#202f3a]"],
+html[data-theme="light"] [class*="bg-[#202f3a]"] {
+  background-color: #e2e8f0 !important;
+}
+
+html.light .bg-brand-dark,
+html.light-mode .bg-brand-dark {
+  background-color: var(--background) !important;
+}
+
+html.light .bg-brand-surface,
+html.light-mode .bg-brand-surface {
+  background-color: #ffffff !important;
+}
+
+html.light .bg-brand-card,
+html.light-mode .bg-brand-card {
+  background-color: #ffffff !important;
+}
+
+/* Borders */
+html.light [class*="border-brand-border"],
+html.light-mode [class*="border-brand-border"],
+html.light [class*="border-[#2a3942]"],
+html.light-mode [class*="border-[#2a3942]"],
+html.light [class*="border-[#233441]"],
+html.light-mode [class*="border-[#233441]"],
+html.light [class*="border-[#2a3c4a]"],
+html.light-mode [class*="border-[#2a3c4a]"],
+html.light [class*="border-[#2e404f]"],
+html.light-mode [class*="border-[#2e404f]"] {
+  border-color: #e2e8f0 !important;
+}
+
+/* Typography Overrides */
+html.light h1, html.light h2, html.light h3, html.light h4, html.light h5, html.light h6,
+html.light-mode h1, html.light-mode h2, html.light-mode h3, html.light-mode h4, html.light-mode h5, html.light-mode h6,
+html[data-theme="light"] h1, html[data-theme="light"] h2, html[data-theme="light"] h3, html[data-theme="light"] h4 {
   color: #0f172a !important;
-  box-shadow: 2px 4px 10px rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.9) !important;
 }
 
-html.light-mode .bg-brand-bubbleIncoming,
-html.light-mode .bg-\[#202c33\] .text-white {
-  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%) !important;
+html.light [class*="text-[#e9edef]"],
+html.light-mode [class*="text-[#e9edef]"],
+html[data-theme="light"] [class*="text-[#e9edef]"] {
   color: #0f172a !important;
-  box-shadow: 2px 4px 10px rgba(0, 0, 0, 0.05), inset 0 1px 0 rgba(255, 255, 255, 1) !important;
+}
+
+html.light [class*="text-gray-200"],
+html.light-mode [class*="text-gray-200"],
+html.light [class*="text-gray-300"],
+html.light-mode [class*="text-gray-300"] {
+  color: #1e293b !important;
+}
+
+html.light [class*="text-gray-400"],
+html.light-mode [class*="text-gray-400"] {
+  color: #475569 !important;
+}
+
+html.light [class*="text-gray-500"],
+html.light-mode [class*="text-gray-500"] {
+  color: #64748b !important;
+}
+
+/* Targeted White Text Overrides (except inside colored buttons/gradients) */
+html.light p[class*="text-white"],
+html.light span[class*="text-white"],
+html.light div[class*="text-white"],
+html.light-mode p[class*="text-white"],
+html.light-mode span[class*="text-white"],
+html.light-mode div[class*="text-white"] {
+  color: #0f172a !important;
+}
+
+/* Preserve White Text for Colored Badges and Action Icons */
+html.light [class*="bg-brand-emerald"] [class*="text-white"],
+html.light-mode [class*="bg-brand-emerald"] [class*="text-white"],
+html.light [class*="bg-emerald-"] [class*="text-white"],
+html.light-mode [class*="bg-emerald-"] [class*="text-white"],
+html.light [class*="bg-red-"] [class*="text-white"],
+html.light-mode [class*="bg-red-"] [class*="text-white"],
+html.light [class*="bg-rose-"] [class*="text-white"],
+html.light-mode [class*="bg-rose-"] [class*="text-white"],
+html.light [class*="bg-blue-"] [class*="text-white"],
+html.light-mode [class*="bg-blue-"] [class*="text-white"],
+html.light [class*="from-"] span[class*="text-white"],
+html.light-mode [class*="from-"] span[class*="text-white"],
+html.light .avatar-3d span,
+html.light-mode .avatar-3d span {
+  color: #ffffff !important;
 }
 
 /* Light Mode Input Elements */
-html.light-mode input, 
-html.light-mode textarea {
-  color: var(--text-primary) !important;
-  background-color: var(--surface-2) !important;
-  border-color: var(--border) !important;
+html.light input,
+html.light textarea,
+html.light select,
+html.light-mode input,
+html.light-mode textarea,
+html.light-mode select {
+  color: #0f172a !important;
+  background-color: #ffffff !important;
+  border-color: #cbd5e1 !important;
 }
 
+html.light input::placeholder,
+html.light textarea::placeholder,
 html.light-mode input::placeholder,
 html.light-mode textarea::placeholder {
   color: #94a3b8 !important;
+}
+
+/* Light Mode Chat Messages: WhatsApp / Adda Classic Comfort */
+html.light .bg-brand-bubbleOutgoing,
+html.light [class*="bg-[#005c4b]"],
+html.light-mode .bg-brand-bubbleOutgoing,
+html.light-mode [class*="bg-[#005c4b]"] {
+  background: linear-gradient(135deg, #dcf8c6 0%, #c8f5b5 100%) !important;
+  border: 1px solid rgba(0, 168, 132, 0.2) !important;
+  color: #0f172a !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.9) !important;
+}
+
+html.light .bg-brand-bubbleOutgoing p,
+html.light-mode .bg-brand-bubbleOutgoing p,
+html.light [class*="bg-[#005c4b]"] p,
+html.light-mode [class*="bg-[#005c4b]"] p {
+  color: #0f172a !important;
+}
+
+html.light .bg-brand-bubbleIncoming,
+html.light-mode .bg-brand-bubbleIncoming {
+  background: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
+  color: #0f172a !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04), inset 0 1px 0 #ffffff !important;
+}
+
+html.light .bg-brand-bubbleIncoming p,
+html.light-mode .bg-brand-bubbleIncoming p {
+  color: #0f172a !important;
+}
+
+/* Secondary 3D buttons in light mode */
+html.light .btn-3d-secondary,
+html.light-mode .btn-3d-secondary {
+  background-color: #ffffff !important;
+  color: #1e293b !important;
+  border-color: #cbd5e1 !important;
+  box-shadow: 0 2px 0 #cbd5e1, 0 3px 6px rgba(0, 0, 0, 0.05), inset 0 1px 0 #ffffff !important;
+}
+
+/* Header border in light mode */
+html.light header,
+html.light-mode header {
+  background-color: rgba(255, 255, 255, 0.85) !important;
+  border-color: #e2e8f0 !important;
+}
+
+/* Light Mode Interactive Hover States */
+html.light [class*="hover:bg-[#182229]"]:hover,
+html.light-mode [class*="hover:bg-[#182229]"]:hover {
+  background-color: #f1f5f9 !important;
+}
+
+html.light [class*="hover:bg-[#202c33]"]:hover,
+html.light-mode [class*="hover:bg-[#202c33]"]:hover {
+  background-color: #e2e8f0 !important;
+}
+
+html.light [class*="hover:bg-[#2a3942]"]:hover,
+html.light-mode [class*="hover:bg-[#2a3942]"]:hover {
+  background-color: #cbd5e1 !important;
+}
+
+html.light [class*="hover:text-white"]:hover,
+html.light-mode [class*="hover:text-white"]:hover {
+  color: #0f172a !important;
+}
+
+/* Light Mode Card and Surface Depth */
+html.light .card-3d,
+html.light-mode .card-3d {
+  background-color: #ffffff;
+  border-color: #e2e8f0;
+}
+
+html.light .card-3d-floating,
+html.light-mode .card-3d-floating {
+  background-color: #ffffff;
+  border-color: #cbd5e1;
 }
 
 /* ── Scrollbars ─────────────────────────────────────────────────── */
@@ -228,7 +450,7 @@ html.light-mode textarea::placeholder {
 
 /* ── Keyframe Animations ────────────────────────────────────────── */
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(8px) scale(0.99); }
+  from { opacity: 0; transform: translateY(6px) scale(0.99); }
   to   { opacity: 1; transform: translateY(0) scale(1); }
 }
 
@@ -238,7 +460,7 @@ html.light-mode textarea::placeholder {
 }
 
 .animate-fade-in {
-  animation: fadeIn 0.22s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: fadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
 .animate-pulse-glow {

@@ -512,30 +512,52 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
             </div>
 
             <div className="space-y-4">
-              <div className="flex flex-col gap-1.5">
+              <div className="flex flex-col gap-2">
                 <label className="text-gray-300 font-semibold">{lang === 'bn' ? 'প্রোফাইল ছবি কে দেখতে পারবে?' : 'Who can see your profile photo?'}</label>
-                <select
-                  value={profileVisibility}
-                  onChange={(e) => setProfileVisibility(e.target.value)}
-                  className="bg-[#202c33] border border-brand-border rounded-xl px-3 py-2 text-white focus:outline-none focus:border-brand-emerald"
-                >
-                  <option value="everyone">{lang === 'bn' ? 'সবাই (Everyone)' : 'Everyone'}</option>
-                  <option value="contacts">{lang === 'bn' ? 'শুধু পরিচিতরা (Contacts only)' : 'Contacts only'}</option>
-                  <option value="nobody">{lang === 'bn' ? 'কেউ না (Nobody)' : 'Nobody'}</option>
-                </select>
+                <div className="grid grid-cols-3 gap-2 p-1.5 bg-[#141d24] rounded-2xl border border-brand-border/60">
+                  {[
+                    { id: 'everyone', label: lang === 'bn' ? 'সবাই' : 'Everyone' },
+                    { id: 'contacts', label: lang === 'bn' ? 'শুধু পরিচিত' : 'Contacts' },
+                    { id: 'nobody', label: lang === 'bn' ? 'কেউ না' : 'Nobody' },
+                  ].map((opt) => (
+                    <button
+                      key={opt.id}
+                      type="button"
+                      onClick={() => setProfileVisibility(opt.id)}
+                      className={`py-2 px-2 rounded-xl text-xs font-bold transition-all text-center ${
+                        profileVisibility === opt.id
+                          ? 'bg-brand-emerald text-brand-dark shadow-md font-extrabold'
+                          : 'text-gray-400 hover:text-white hover:bg-white/5'
+                      }`}
+                    >
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
               </div>
 
-              <div className="flex flex-col gap-1.5">
+              <div className="flex flex-col gap-2">
                 <label className="text-gray-300 font-semibold">{lang === 'bn' ? 'সর্বশেষ সক্রিয়তার সময় (Last Seen)' : 'Last seen & Online status'}</label>
-                <select
-                  value={lastSeenVisibility}
-                  onChange={(e) => setLastSeenVisibility(e.target.value)}
-                  className="bg-[#202c33] border border-brand-border rounded-xl px-3 py-2 text-white focus:outline-none focus:border-brand-emerald"
-                >
-                  <option value="everyone">{lang === 'bn' ? 'সবাই (Everyone)' : 'Everyone'}</option>
-                  <option value="contacts">{lang === 'bn' ? 'শুধু পরিচিতরা (Contacts only)' : 'Contacts only'}</option>
-                  <option value="nobody">{lang === 'bn' ? 'কেউ না (Nobody)' : 'Nobody'}</option>
-                </select>
+                <div className="grid grid-cols-3 gap-2 p-1.5 bg-[#141d24] rounded-2xl border border-brand-border/60">
+                  {[
+                    { id: 'everyone', label: lang === 'bn' ? 'সবাই' : 'Everyone' },
+                    { id: 'contacts', label: lang === 'bn' ? 'শুধু পরিচিত' : 'Contacts' },
+                    { id: 'nobody', label: lang === 'bn' ? 'কেউ না' : 'Nobody' },
+                  ].map((opt) => (
+                    <button
+                      key={opt.id}
+                      type="button"
+                      onClick={() => setLastSeenVisibility(opt.id)}
+                      className={`py-2 px-2 rounded-xl text-xs font-bold transition-all text-center ${
+                        lastSeenVisibility === opt.id
+                          ? 'bg-brand-emerald text-brand-dark shadow-md font-extrabold'
+                          : 'text-gray-400 hover:text-white hover:bg-white/5'
+                      }`}
+                    >
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
               </div>
 
               <div className="p-3.5 rounded-2xl bg-brand-emerald/10 border border-brand-emerald/30 text-[11px] text-gray-300 flex items-start gap-2.5">

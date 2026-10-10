@@ -6,6 +6,22 @@ export type Theme = 'dark' | 'light';
 
 const THEME_KEY = 'adda_theme';
 
+export function applyTheme(t: Theme) {
+  if (typeof document === 'undefined') return;
+  const root = document.documentElement;
+  if (t === 'light') {
+    root.classList.remove('dark', 'dark-mode');
+    root.classList.add('light', 'light-mode');
+    root.setAttribute('data-theme', 'light');
+    root.style.colorScheme = 'light';
+  } else {
+    root.classList.remove('light', 'light-mode');
+    root.classList.add('dark', 'dark-mode');
+    root.setAttribute('data-theme', 'dark');
+    root.style.colorScheme = 'dark';
+  }
+}
+
 export function useTheme() {
   const [theme, setTheme] = useState<Theme>('dark');
 
@@ -25,17 +41,6 @@ export function useTheme() {
       }
     } catch (e) {}
   }, []);
-
-  const applyTheme = (t: Theme) => {
-    const root = document.documentElement;
-    if (t === 'light') {
-      root.classList.add('light-mode');
-      root.classList.remove('dark-mode');
-    } else {
-      root.classList.add('dark-mode');
-      root.classList.remove('light-mode');
-    }
-  };
 
   const toggleTheme = useCallback(() => {
     setTheme((prev) => {

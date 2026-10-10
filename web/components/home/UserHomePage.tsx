@@ -27,6 +27,7 @@ import { useLanguage } from '@/lib/i18n';
 import { api } from '@/lib/api';
 import UserAvatar from '@/components/common/UserAvatar';
 import { StatusItem } from '@/components/status/StatusTray';
+import { PrivacyDropdown } from '@/components/common/PrivacyDropdown';
 
 interface PostItem {
   id: string;
@@ -308,26 +309,13 @@ export function UserHomePage({
                     <span>{lang === 'bn' ? 'ছবি যুক্ত করুন' : 'Photo'}</span>
                   </button>
 
-                  {/* Privacy Selector (Public vs Friends) */}
-                  <div className="relative flex items-center bg-[#202c33] rounded-xl px-2.5 py-1.5 border border-brand-border/70 text-xs font-semibold text-gray-300 btn-3d-secondary">
-                    {privacy === 'public' ? (
-                      <Globe className="w-3.5 h-3.5 text-emerald-400 mr-1.5" />
-                    ) : (
-                      <Users className="w-3.5 h-3.5 text-blue-400 mr-1.5" />
-                    )}
-                    <select
-                      value={privacy}
-                      onChange={(e) => setPrivacy(e.target.value as any)}
-                      className="bg-transparent text-white text-xs font-semibold focus:outline-none cursor-pointer pr-1"
-                    >
-                      <option value="public" className="bg-[#111b21] text-white">
-                        {lang === 'bn' ? '🌐 পাবলিক' : '🌐 Public'}
-                      </option>
-                      <option value="friends" className="bg-[#111b21] text-white">
-                        {lang === 'bn' ? '👥 শুধু বন্ধুরা' : '👥 Friends Only'}
-                      </option>
-                    </select>
-                  </div>
+                  {/* Custom 3D Tactile Privacy Selector */}
+                  <PrivacyDropdown
+                    value={privacy as 'public' | 'friends'}
+                    onChange={(val) => setPrivacy(val)}
+                    lang={lang}
+                    size="sm"
+                  />
                 </div>
 
                 <button

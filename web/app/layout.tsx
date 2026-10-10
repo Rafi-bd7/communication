@@ -34,13 +34,38 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="bn" className="dark">
+    <html lang="bn" className="dark dark-mode" suppressHydrationWarning>
       <head>
         <link rel="manifest" href="/manifest.webmanifest" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function() {
+                try {
+                  var saved = localStorage.getItem('adda_theme');
+                  var prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+                  var theme = saved || (prefersDark ? 'dark' : 'light');
+                  var root = document.documentElement;
+                  if (theme === 'light') {
+                    root.classList.remove('dark', 'dark-mode');
+                    root.classList.add('light', 'light-mode');
+                    root.setAttribute('data-theme', 'light');
+                    root.style.colorScheme = 'light';
+                  } else {
+                    root.classList.remove('light', 'light-mode');
+                    root.classList.add('dark', 'dark-mode');
+                    root.setAttribute('data-theme', 'dark');
+                    root.style.colorScheme = 'dark';
+                  }
+                } catch (e) {}
+              })();
+            `,
+          }}
+        />
       </head>
-      <body className="bg-[#0b141a] text-[#e9edef] antialiased selection:bg-brand-emerald selection:text-brand-dark">
+      <body className="antialiased selection:bg-brand-emerald selection:text-brand-dark transition-colors duration-200">
         <AuthProvider>
           {children}
           <PWAInstallPrompt />

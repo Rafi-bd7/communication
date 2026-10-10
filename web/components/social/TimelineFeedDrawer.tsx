@@ -19,6 +19,7 @@ import { api } from '@/lib/api';
 import { useAuth } from '@/hooks/useAuth';
 import { useLanguage } from '@/lib/i18n';
 import UserAvatar from '@/components/common/UserAvatar';
+import { PrivacyDropdown } from '@/components/common/PrivacyDropdown';
 
 interface TimelineFeedDrawerProps {
   isOpen: boolean;
@@ -212,22 +213,13 @@ export function TimelineFeedDrawer({
                     <span>{isUploadingMedia ? (lang === 'bn' ? 'আপলোড হচ্ছে...' : 'Uploading...') : (lang === 'bn' ? 'ছবি' : 'Photo')}</span>
                   </button>
 
-                  {/* Privacy Selector */}
-                  <div className="flex items-center gap-1 bg-[#202c33] rounded-xl px-2.5 py-1 text-xs border border-brand-border/70">
-                    {privacy === 'public' ? <Globe className="w-3.5 h-3.5 text-blue-400" /> : <Users className="w-3.5 h-3.5 text-emerald-400" />}
-                    <select
-                      value={privacy}
-                      onChange={(e) => setPrivacy(e.target.value as 'public' | 'friends')}
-                      className="bg-transparent text-gray-200 text-xs focus:outline-none cursor-pointer"
-                    >
-                      <option value="public" className="bg-[#111b21] text-white">
-                        {lang === 'bn' ? '🌐 পাবলিক (Public)' : '🌐 Public'}
-                      </option>
-                      <option value="friends" className="bg-[#111b21] text-white">
-                        {lang === 'bn' ? '👥 শুধু বন্ধুরা (Friends)' : '👥 Friends Only'}
-                      </option>
-                    </select>
-                  </div>
+                  {/* Custom 3D Privacy Selector */}
+                  <PrivacyDropdown
+                    value={privacy}
+                    onChange={(val) => setPrivacy(val)}
+                    lang={lang}
+                    size="sm"
+                  />
                 </div>
 
                 <button

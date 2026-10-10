@@ -38,6 +38,7 @@ import {
 import { api } from '@/lib/api';
 import { useLanguage } from '@/lib/i18n';
 import { useAuth } from '@/hooks/useAuth';
+import { PrivacyDropdown } from '@/components/common/PrivacyDropdown';
 import UserAvatar from '@/components/common/UserAvatar';
 
 interface UserProfileModalProps {
@@ -994,14 +995,12 @@ export function UserProfileModal({
                             />
                           </label>
 
-                          <select
-                            value={newPostPrivacy}
-                            onChange={(e) => setNewPostPrivacy(e.target.value as any)}
-                            className="bg-[#202c33] text-gray-300 rounded-xl px-2.5 py-1.5 text-[11px] border border-brand-border focus:outline-none focus:border-brand-emerald"
-                          >
-                            <option value="public">{lang === 'bn' ? '🌍 পাবলিক' : '🌍 Public'}</option>
-                            <option value="friends">{lang === 'bn' ? '👥 শুধু বন্ধুরা' : '👥 Friends Only'}</option>
-                          </select>
+                          <PrivacyDropdown
+                            value={newPostPrivacy as 'public' | 'friends'}
+                            onChange={(val) => setNewPostPrivacy(val)}
+                            lang={lang}
+                            size="sm"
+                          />
                         </div>
 
                         <button
