@@ -639,9 +639,11 @@ export default function ChatPage() {
               />
             ) : (
               <div className="hidden md:flex flex-1 h-full flex-col items-center justify-center bg-[#111b21] p-8 text-center text-gray-400 select-none border-l border-[#2a3942]">
-                <div className="w-20 h-20 rounded-3xl bg-gradient-to-tr from-brand-emerald via-emerald-400 to-teal-300 flex items-center justify-center text-brand-dark mb-4 shadow-xl shadow-brand-emerald/20 font-black text-3xl">
-                  আ
-                </div>
+                <img
+                  src="/logo.png"
+                  alt="Adda Logo"
+                  className="w-24 h-24 rounded-3xl object-cover mb-4 shadow-2xl shadow-brand-emerald/30 border border-brand-emerald/40 hover:scale-105 transition-transform"
+                />
                 <h3 className="text-2xl font-extrabold text-white mb-1">
                   Adda • {t.brandName}
                 </h3>

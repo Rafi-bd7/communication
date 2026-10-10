@@ -35,9 +35,11 @@ export default function HomePage() {
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
           {/* Brand Logo */}
           <Link href="/" className="flex items-center gap-3.5 group">
-            <div className="w-11 h-11 rounded-2xl bg-gradient-to-tr from-brand-emerald via-emerald-400 to-teal-300 flex items-center justify-center text-brand-dark font-extrabold text-2xl shadow-lg shadow-brand-emerald/25 group-hover:scale-105 transition-transform">
-              আ
-            </div>
+            <img 
+              src="/logo.png" 
+              alt="Adda Logo" 
+              className="w-11 h-11 rounded-2xl object-cover shadow-lg shadow-brand-emerald/25 border border-brand-emerald/30 group-hover:scale-105 group-hover:shadow-brand-emerald/40 transition-all" 
+            />
             <div>
               <div className="flex items-center gap-2">
                 <span className="text-xl font-extrabold tracking-tight text-white">
@@ -162,7 +164,7 @@ export default function HomePage() {
                   <span className="w-3 h-3 rounded-full bg-[#ffbd2e] inline-block" />
                   <span className="w-3 h-3 rounded-full bg-[#27c93f] inline-block" />
                   <span className="ml-3 text-xs font-semibold text-gray-300 flex items-center gap-2">
-                    <span className="w-2 h-2 rounded-full bg-brand-emerald animate-pulse" />
+                    <img src="/logo.png" alt="Adda" className="w-4 h-4 rounded-md object-cover" />
                     <span>Adda • Live Chat</span>
                   </span>
                 </div>
@@ -355,7 +357,11 @@ export default function HomePage() {
           </div>
 
           {/* Footer Matching Screenshot 1 */}
-          <div className="w-full border-t border-white/5 mt-16 pt-8 text-center">
+          <div className="w-full border-t border-white/5 mt-16 pt-8 flex flex-col items-center gap-2.5 text-center">
+            <div className="flex items-center gap-2">
+              <img src="/logo.png" alt="Adda Logo" className="w-6 h-6 rounded-lg object-cover shadow-sm border border-brand-emerald/30" />
+              <span className="text-sm font-bold text-gray-300 tracking-tight">Adda</span>
+            </div>
             <p className="text-gray-400 text-xs sm:text-sm font-normal">
               © {new Date().getFullYear()} Adda by RAFI. Designed for Everyone.
             </p>

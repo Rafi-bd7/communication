@@ -149,9 +149,11 @@ export default function LoginPage() {
       <div className="w-full max-w-md bg-[#111b21] border border-[#2a3942] rounded-3xl p-8 shadow-2xl z-10 animate-fade-in flex flex-col text-white">
         {/* Brand Header */}
         <div className="flex flex-col items-center text-center mb-7">
-          <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-brand-emerald via-emerald-400 to-teal-300 flex items-center justify-center text-brand-dark shadow-xl shadow-brand-emerald/25 mb-3">
-            <span className="font-extrabold text-2xl tracking-tight select-none">আ</span>
-          </div>
+          <img
+            src="/logo.png"
+            alt="Adda Logo"
+            className="w-20 h-20 rounded-3xl object-cover shadow-2xl shadow-brand-emerald/30 border border-brand-emerald/40 mb-3"
+          />
           <h1 className="text-3xl font-extrabold tracking-tight text-white">{t.brandName}</h1>
           <p className="text-xs font-medium text-brand-emerald mt-1">{t.brandTagline}</p>
           <p className="text-[11px] text-gray-400 mt-0.5">{t.brandSubtitle}</p>

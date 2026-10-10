@@ -53,9 +53,11 @@ export function PWAInstallPrompt() {
   return (
     <div className="fixed bottom-4 left-4 right-4 md:left-auto md:right-4 md:w-96 bg-[#111b21]/95 backdrop-blur-md border border-brand-emerald/40 p-4 rounded-2xl shadow-2xl z-50 flex items-center justify-between text-white animate-fade-in">
       <div className="flex items-center gap-3">
-        <div className="w-10 h-10 rounded-xl bg-brand-emerald flex items-center justify-center text-brand-dark shadow-md font-bold">
-          <Download className="w-5 h-5" />
-        </div>
+        <img 
+          src="/icons/icon-192.png" 
+          alt="Adda Logo" 
+          className="w-10 h-10 rounded-xl object-cover shadow-md border border-brand-emerald/30 flex-shrink-0" 
+        />
         <div>
           <h4 className="font-bold text-sm text-white">{t.pwaTitle}</h4>
           <p className="text-[11px] text-gray-400">{t.pwaDesc}</p>

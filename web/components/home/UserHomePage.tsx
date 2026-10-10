@@ -635,9 +635,11 @@ export function UserHomePage({
 
           {/* Social Branding Card */}
           <div className="bg-gradient-to-tr from-[#111b21] via-[#182229] to-[#202c33] border border-brand-border rounded-3xl p-5 shadow-xl text-center text-xs text-gray-400">
-            <span className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-brand-emerald to-teal-400 flex items-center justify-center text-brand-dark font-black text-xl mx-auto mb-2 shadow-md">
-              আ
-            </span>
+            <img
+              src="/logo.png"
+              alt="Adda Logo"
+              className="w-12 h-12 rounded-2xl object-cover mx-auto mb-2.5 shadow-lg shadow-brand-emerald/25 border border-brand-emerald/30"
+            />
             <h4 className="font-bold text-white text-sm">Adda • {t.brandName}</h4>
             <p className="text-[11px] text-brand-emerald font-semibold mt-0.5">{t.brandTagline}</p>
             <p className="text-[10px] text-gray-400 mt-2 leading-relaxed">

@@ -8,8 +8,15 @@ export const metadata: Metadata = {
   description: 'আধুনিক, নিরাপদ ও বাংলা-ফার্স্ট যোগাযোগ প্ল্যাটফর্ম। রিয়েলটাইম চ্যাট, অডিও/ভিডিও কল, আড্ডাবাড়ি ও স্টোরি।',
   manifest: '/manifest.webmanifest',
   icons: {
-    icon: '/icons/icon-192.png',
-    apple: '/icons/icon-192.png',
+    icon: [
+      { url: '/favicon.ico', sizes: 'any' },
+      { url: '/favicon.png', type: 'image/png' },
+      { url: '/icons/icon-192.png', sizes: '192x192', type: 'image/png' },
+    ],
+    apple: [
+      { url: '/apple-touch-icon.png', sizes: '180x180', type: 'image/png' },
+    ],
+    shortcut: '/favicon.ico',
   },
 };
 

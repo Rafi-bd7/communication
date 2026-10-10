@@ -90,9 +90,11 @@ export default function RegisterPage() {
       <div className="w-full max-w-md bg-[#111b21] border border-[#2a3942] rounded-3xl p-8 shadow-2xl z-10 animate-fade-in flex flex-col text-white">
         {/* Brand Header */}
         <div className="flex flex-col items-center text-center mb-6">
-          <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-brand-emerald via-emerald-400 to-teal-300 flex items-center justify-center text-brand-dark shadow-xl shadow-brand-emerald/25 mb-2">
-            <span className="font-extrabold text-2xl tracking-tight select-none">আ</span>
-          </div>
+          <img
+            src="/logo.png"
+            alt="Adda Logo"
+            className="w-16 h-16 rounded-2xl object-cover shadow-2xl shadow-brand-emerald/30 border border-brand-emerald/40 mb-2.5"
+          />
           <h1 className="text-2xl font-extrabold tracking-tight">
             {lang === 'bn' ? 'আড্ডায় যোগ দিন' : 'Create an Account'}
           </h1>

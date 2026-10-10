@@ -57,11 +57,15 @@ export function AppSidebar({
         {/* Brand Logo */}
         <div 
           onClick={() => setActiveTab('chats')} 
-          className="group relative w-11 h-11 rounded-2xl bg-gradient-to-tr from-brand-emerald via-emerald-400 to-teal-300 flex items-center justify-center text-brand-dark shadow-lg shadow-brand-emerald/25 cursor-pointer hover:scale-105 active:scale-95 transition-all"
+          className="group relative w-11 h-11 rounded-2xl cursor-pointer hover:scale-105 active:scale-95 transition-all"
           title="Adda — স্মার্ট আলাপ, যেকোনো জায়গায়।"
         >
-          <span className="font-extrabold text-lg tracking-tight select-none">আ</span>
-          <span className="absolute -bottom-1 -right-1 w-3 h-3 bg-brand-dark rounded-full flex items-center justify-center">
+          <img
+            src="/logo.png"
+            alt="Adda Logo"
+            className="w-11 h-11 rounded-2xl object-cover shadow-lg shadow-brand-emerald/25 border border-brand-emerald/30 group-hover:shadow-brand-emerald/40 transition-all"
+          />
+          <span className="absolute -bottom-1 -right-1 w-3.5 h-3.5 bg-brand-dark rounded-full flex items-center justify-center">
             <span className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse" />
           </span>
         </div>
