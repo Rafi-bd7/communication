@@ -45,20 +45,24 @@ from sqlalchemy import text
 
 async def init_db():
     from app.models import models  # noqa
+    # 1. Create all tables in its own dedicated transaction
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
 
-        # Seamlessly auto-migrate new profile fields into users table without data loss
-        new_cols = [
-            ("date_of_birth", "VARCHAR(50)"),
-            ("lives_in", "VARCHAR(100)"),
-            ("education", "VARCHAR(150)"),
-            ("workplace", "VARCHAR(150)"),
-            ("cover_url", "VARCHAR(255)"),
-        ]
-        for col_name, col_type in new_cols:
-            try:
-                await conn.execute(text(f"ALTER TABLE users ADD COLUMN {col_name} {col_type}"))
-            except Exception:
-                # Column already present or migration handled
-                pass
+    # 2. Seamlessly auto-migrate new profile fields for any legacy existing database
+    new_cols = [
+        ("date_of_birth", "VARCHAR(50)"),
+        ("lives_in", "VARCHAR(100)"),
+        ("education", "VARCHAR(150)"),
+        ("workplace", "VARCHAR(150)"),
+        ("cover_url", "VARCHAR(255)"),
+    ]
+    for col_name, col_type in new_cols:
+        try:
+            async with engine.begin() as conn:
+                if "sqlite" in settings.DATABASE_URL:
+                    await conn.execute(text(f"ALTER TABLE users ADD COLUMN {col_name} {col_type}"))
+                else:
+                    await conn.execute(text(f"ALTER TABLE users ADD COLUMN IF NOT EXISTS {col_name} {col_type}"))
+        except Exception:
+            pass

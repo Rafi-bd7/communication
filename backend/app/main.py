@@ -36,23 +36,26 @@ async def lifespan(app: FastAPI):
     await init_db()
 
     # Automatically seed an initial admin account only if none exist
-    async with AsyncSessionLocal() as session:
-        user_res = await session.execute(select(User).limit(1))
-        if not user_res.scalar_one_or_none():
-            logger.info("Initializing system administrator account...")
-            pwd_hash = get_password_hash("admin123")
-            admin_user = User(
-                username="admin",
-                email="admin@adda.chat",
-                full_name="সিস্টেম অ্যাডমিন",
-                hashed_password=pwd_hash,
-                bio="আড্ডা প্ল্যাটফর্ম অ্যাডমিনিস্ট্রেটর 🛡️",
-                is_admin=True,
-                avatar_url=None
-            )
-            session.add(admin_user)
-            await session.commit()
-            logger.info("Admin account initialized (username: admin, password: admin123)")
+    try:
+        async with AsyncSessionLocal() as session:
+            user_res = await session.execute(select(User).limit(1))
+            if not user_res.scalar_one_or_none():
+                logger.info("Initializing system administrator account...")
+                pwd_hash = get_password_hash("admin123")
+                admin_user = User(
+                    username="admin",
+                    email="admin@adda.chat",
+                    full_name="সিস্টেম অ্যাডমিন",
+                    hashed_password=pwd_hash,
+                    bio="আড্ডা প্ল্যাটফর্ম অ্যাডমিনিস্ট্রেটর 🛡️",
+                    is_admin=True,
+                    avatar_url=None
+                )
+                session.add(admin_user)
+                await session.commit()
+                logger.info("Admin account initialized (username: admin, password: admin123)")
+    except Exception as e:
+        logger.warning(f"Admin seeding note: {e}")
 
     yield
     logger.info("Shutting down Adda communication platform backend...")
