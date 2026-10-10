@@ -12,6 +12,7 @@ import {
   Smartphone,
   Copy,
   UserCheck,
+  UserX,
   Sparkles
 } from 'lucide-react';
 import { api } from '@/lib/api';
@@ -125,6 +126,28 @@ export function DiscoverPeopleModal({
     }
   };
 
+  const handleUnfriend = async (targetUserId: string, name: string) => {
+    const confirmMsg = lang === 'bn'
+      ? `আপনি কি নিশ্চিত যে ${name}-কে আনফ্রেন্ড করতে চান?`
+      : `Are you sure you want to unfriend ${name}?`;
+    if (!window.confirm(confirmMsg)) return;
+
+    try {
+      await api.unfriendUser(targetUserId);
+      setMyFriends((prev) => prev.filter((f) => f.id !== targetUserId));
+      setSuggestions((prev) =>
+        prev.map((s) =>
+          s.user.id === targetUserId
+            ? { ...s, friendship_status: 'none', friendship_id: null }
+            : s
+        )
+      );
+      await loadData();
+    } catch (err) {
+      alert(lang === 'bn' ? 'আনফ্রেন্ড করা যায়নি' : 'Could not unfriend');
+    }
+  };
+
   const handleCopyInviteLink = () => {
     const origin = typeof window !== 'undefined' ? window.location.origin : '';
     navigator.clipboard.writeText(`${origin}/register`);
@@ -150,12 +173,12 @@ export function DiscoverPeopleModal({
 
   return (
     <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4 select-none">
-      <div className="bg-[#111b21] border border-brand-border rounded-3xl w-full max-w-xl shadow-2xl flex flex-col text-white max-h-[88vh] overflow-hidden animate-fade-in">
+      <div className="bg-[#111b21] border border-brand-border rounded-3xl w-full max-w-xl card-3d-floating flex flex-col text-white max-h-[88vh] overflow-hidden animate-fade-in">
         
         {/* Header */}
         <div className="p-5 border-b border-brand-border/80 flex items-center justify-between bg-[#152028]">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-brand-emerald to-teal-400 text-brand-dark flex items-center justify-center shadow-lg font-bold">
+            <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-brand-emerald to-teal-400 text-brand-dark flex items-center justify-center shadow-lg font-bold btn-3d">
               <Users className="w-5 h-5" />
             </div>
             <div>
@@ -180,10 +203,10 @@ export function DiscoverPeopleModal({
           <div className="flex items-center gap-2">
             <button
               onClick={() => setActiveTab('suggestions')}
-              className={`flex-1 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
+              className={`flex-1 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
                 activeTab === 'suggestions'
-                  ? 'bg-brand-emerald text-brand-dark shadow-sm'
-                  : 'bg-[#202c33] text-gray-400 hover:text-white'
+                  ? 'bg-gradient-to-r from-brand-emerald to-teal-400 text-brand-dark btn-3d'
+                  : 'bg-[#202c33] text-gray-400 hover:text-white btn-3d-secondary'
               }`}
             >
               <Users className="w-3.5 h-3.5" />
@@ -195,10 +218,10 @@ export function DiscoverPeopleModal({
 
             <button
               onClick={() => setActiveTab('friends')}
-              className={`flex-1 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
+              className={`flex-1 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
                 activeTab === 'friends'
-                  ? 'bg-brand-emerald text-brand-dark shadow-sm'
-                  : 'bg-[#202c33] text-gray-400 hover:text-white'
+                  ? 'bg-gradient-to-r from-brand-emerald to-teal-400 text-brand-dark btn-3d'
+                  : 'bg-[#202c33] text-gray-400 hover:text-white btn-3d-secondary'
               }`}
             >
               <UserCheck className="w-3.5 h-3.5" />
@@ -210,10 +233,10 @@ export function DiscoverPeopleModal({
 
             <button
               onClick={() => setActiveTab('requests')}
-              className={`flex-1 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
+              className={`flex-1 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
                 activeTab === 'requests'
-                  ? 'bg-brand-emerald text-brand-dark shadow-sm'
-                  : 'bg-[#202c33] text-gray-400 hover:text-white'
+                  ? 'bg-gradient-to-r from-brand-emerald to-teal-400 text-brand-dark btn-3d'
+                  : 'bg-[#202c33] text-gray-400 hover:text-white btn-3d-secondary'
               }`}
             >
               <Clock className="w-3.5 h-3.5" />
@@ -234,7 +257,7 @@ export function DiscoverPeopleModal({
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 placeholder={lang === 'bn' ? 'নাম বা ইউজারনেম দিয়ে খুঁজুন...' : 'Search by name or username...'}
-                className="w-full bg-[#202c33] text-white text-xs rounded-xl pl-9 pr-4 py-2 border border-brand-border focus:outline-none focus:border-brand-emerald"
+                className="w-full bg-[#202c33] text-white text-xs rounded-xl pl-9 pr-4 py-2.5 border border-brand-border input-3d focus:outline-none focus:border-brand-emerald"
               />
             </div>
           )}
@@ -317,22 +340,33 @@ export function DiscoverPeopleModal({
                     </div>
                   </div>
 
-                  <button
-                    onClick={() => {
-                      onStartChat(friend.id);
-                      onClose();
-                    }}
-                    className="px-3 py-1.5 rounded-xl bg-brand-emerald text-brand-dark font-bold text-xs flex items-center gap-1.5 shadow-sm active:scale-95 transition-all flex-shrink-0"
-                  >
-                    <MessageSquare className="w-3.5 h-3.5" />
-                    <span>{lang === 'bn' ? 'মেসেজ' : 'Message'}</span>
-                  </button>
+                  <div className="flex items-center gap-2 flex-shrink-0">
+                    <button
+                      onClick={() => {
+                        onStartChat(friend.id);
+                        onClose();
+                      }}
+                      className="px-3 py-1.5 rounded-xl bg-gradient-to-r from-brand-emerald to-teal-400 text-brand-dark font-extrabold text-xs flex items-center gap-1.5 btn-3d active:scale-95 transition-all flex-shrink-0"
+                    >
+                      <MessageSquare className="w-3.5 h-3.5" />
+                      <span>{lang === 'bn' ? 'মেসেজ' : 'Message'}</span>
+                    </button>
+
+                    <button
+                      onClick={() => handleUnfriend(friend.id, friend.full_name || friend.username)}
+                      title={lang === 'bn' ? 'আনফ্রেন্ড করুন' : 'Unfriend'}
+                      className="px-2.5 py-1.5 rounded-xl bg-red-500/15 hover:bg-red-500/25 text-red-400 font-bold text-xs flex items-center gap-1 border border-red-500/30 btn-3d-secondary transition-all active:scale-95"
+                    >
+                      <UserX className="w-3.5 h-3.5 text-red-400" />
+                      <span>{lang === 'bn' ? 'আনফ্রেন্ড' : 'Unfriend'}</span>
+                    </button>
+                  </div>
                 </div>
               ))
             )
           ) : filteredSuggestions.length === 0 ? (
             <div className="py-10 text-center flex flex-col items-center gap-4">
-              <div className="w-12 h-12 rounded-2xl bg-brand-emerald/15 text-brand-emerald flex items-center justify-center">
+              <div className="w-12 h-12 rounded-2xl bg-brand-emerald/15 text-brand-emerald flex items-center justify-center card-3d">
                 <Smartphone className="w-6 h-6" />
               </div>
               <p className="text-xs text-gray-400 max-w-xs leading-relaxed">
@@ -342,7 +376,7 @@ export function DiscoverPeopleModal({
               </p>
               <button
                 onClick={handleCopyInviteLink}
-                className="px-4 py-2 rounded-xl bg-brand-emerald text-brand-dark font-bold text-xs flex items-center gap-2 shadow"
+                className="px-4 py-2 rounded-xl bg-gradient-to-r from-brand-emerald to-teal-400 text-brand-dark font-bold text-xs flex items-center gap-2 btn-3d"
               >
                 {copiedLink ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
                 <span>{copiedLink ? (lang === 'bn' ? 'লিংক কপি হয়েছে!' : 'Copied!') : (lang === 'bn' ? 'আমন্ত্রণ লিংক কপি করুন' : 'Copy Invite Link')}</span>
@@ -354,7 +388,7 @@ export function DiscoverPeopleModal({
               const status = sug.friendship_status;
 
               return (
-                <div key={u.id} className="py-3.5 flex items-center justify-between gap-3">
+                <div key={u.id} className="py-3.5 flex items-center justify-between gap-3 card-3d-hover p-2 rounded-2xl transition-all">
                   <div
                     onClick={() => onViewProfile && onViewProfile(u)}
                     className="flex items-center gap-3 cursor-pointer group flex-1 min-w-0"
@@ -365,6 +399,7 @@ export function DiscoverPeopleModal({
                       size="md"
                       showOnline={true}
                       isOnline={u.is_online}
+                      className="avatar-3d"
                     />
                     <div className="min-w-0">
                       <h4 className="text-xs font-bold text-white group-hover:text-brand-emerald transition-colors truncate">
@@ -385,22 +420,32 @@ export function DiscoverPeopleModal({
                         onClose();
                       }}
                       title={lang === 'bn' ? 'সরাসরি চ্যাট শুরু করুন' : 'Start direct chat'}
-                      className="px-3 py-1.5 rounded-xl bg-brand-emerald text-brand-dark font-bold text-xs flex items-center gap-1.5 shadow-sm active:scale-95 transition-all"
+                      className="px-3 py-1.5 rounded-xl bg-gradient-to-r from-brand-emerald to-teal-400 text-brand-dark font-extrabold text-xs flex items-center gap-1.5 btn-3d active:scale-95 transition-all"
                     >
                       <MessageSquare className="w-3.5 h-3.5" />
                       <span>{lang === 'bn' ? 'মেসেজ' : 'Message'}</span>
                     </button>
 
                     {status === 'friends' ? (
-                      <span className="px-2.5 py-1.5 rounded-xl bg-[#202c33] text-brand-emerald font-semibold text-[11px] flex items-center gap-1 border border-brand-emerald/30">
-                        <Check className="w-3 h-3" />
-                        <span>{lang === 'bn' ? 'বন্ধু' : 'Friends'}</span>
-                      </span>
+                      <div className="flex items-center gap-1.5">
+                        <span className="px-2.5 py-1.5 rounded-xl bg-[#202c33] text-brand-emerald font-bold text-[11px] flex items-center gap-1 border border-brand-emerald/30 shadow-inner">
+                          <Check className="w-3 h-3" />
+                          <span>{lang === 'bn' ? 'বন্ধু' : 'Friends'}</span>
+                        </span>
+                        <button
+                          onClick={() => handleUnfriend(u.id, u.full_name || u.username)}
+                          title={lang === 'bn' ? 'আনফ্রেন্ড করুন' : 'Unfriend'}
+                          className="px-2 py-1.5 rounded-xl bg-red-500/15 hover:bg-red-500/25 text-red-400 font-semibold text-[11px] flex items-center gap-1 border border-red-500/30 btn-3d-secondary transition-all active:scale-95"
+                        >
+                          <UserX className="w-3 h-3 text-red-400" />
+                          <span>{lang === 'bn' ? 'আনফ্রেন্ড' : 'Unfriend'}</span>
+                        </button>
+                      </div>
                     ) : status === 'pending_sent' ? (
                       <button
                         onClick={() => handleCancelRequest(u.id)}
                         title={lang === 'bn' ? 'অনুরোধ বাতিল করুন' : 'Cancel friend request'}
-                        className="px-2.5 py-1.5 rounded-xl bg-red-500/15 hover:bg-red-500/25 text-red-400 font-semibold text-[11px] flex items-center gap-1 border border-red-500/30 transition-all active:scale-95"
+                        className="px-2.5 py-1.5 rounded-xl bg-red-500/15 hover:bg-red-500/25 text-red-400 font-semibold text-[11px] flex items-center gap-1 border border-red-500/30 btn-3d-secondary transition-all active:scale-95"
                       >
                         <X className="w-3 h-3 text-red-400" />
                         <span>{lang === 'bn' ? 'বাতিল' : 'Cancel'}</span>
@@ -408,7 +453,7 @@ export function DiscoverPeopleModal({
                     ) : status === 'pending_received' ? (
                       <button
                         onClick={() => handleAcceptRequest(sug.friendship_id, u.id)}
-                        className="px-2.5 py-1.5 rounded-xl bg-emerald-500 text-brand-dark font-bold text-[11px] shadow-sm hover:brightness-110 active:scale-95 transition-all"
+                        className="px-3 py-1.5 rounded-xl bg-gradient-to-r from-brand-emerald to-teal-400 text-brand-dark font-extrabold text-[11px] btn-3d active:scale-95 transition-all"
                       >
                         {lang === 'bn' ? 'গ্রহণ' : 'Accept'}
                       </button>
@@ -416,9 +461,10 @@ export function DiscoverPeopleModal({
                       <button
                         onClick={() => handleSendRequest(u.id)}
                         title={lang === 'bn' ? 'ফ্রেন্ড রিকোয়েস্ট পাঠান' : 'Send friend request'}
-                        className="p-1.5 rounded-xl bg-[#202c33] hover:bg-[#2a3942] border border-brand-border text-gray-300 hover:text-white transition-all active:scale-95"
+                        className="px-2.5 py-1.5 rounded-xl bg-[#202c33] hover:bg-[#2a3942] border border-brand-border text-sky-400 hover:text-sky-300 font-bold text-xs flex items-center gap-1 btn-3d-secondary transition-all active:scale-95"
                       >
                         <UserPlus className="w-4 h-4 text-sky-400" />
+                        <span>{lang === 'bn' ? 'যুক্ত করুন' : 'Add'}</span>
                       </button>
                     )}
                   </div>

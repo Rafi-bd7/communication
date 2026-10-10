@@ -67,52 +67,20 @@ export function ChatList({
   const [isLoadingUsers, setIsLoadingUsers] = useState(false);
   const [lanUrl, setLanUrl] = useState('');
   const [copiedLink, setCopiedLink] = useState(false);
-  const [isCreatingTestFriend, setIsCreatingTestFriend] = useState(false);
 
   useEffect(() => {
-    api.getNetworkInfo()
-      .then((info) => {
-        setLanUrl(info.frontend_url || `http://${window.location.hostname}:3000`);
-      })
-      .catch(() => {
-        const host = typeof window !== 'undefined' ? window.location.hostname : 'localhost';
-        setLanUrl(`http://${host === 'localhost' ? '192.168.0.103' : host}:3000`);
-      });
+    if (typeof window !== 'undefined') {
+      setLanUrl(window.location.origin);
+    }
   }, []);
 
   const handleCopyLink = () => {
-    const url = lanUrl ? `${lanUrl}/register` : 'http://192.168.0.103:3000/register';
-    navigator.clipboard.writeText(url);
+    const origin = typeof window !== 'undefined' ? window.location.origin : '';
+    navigator.clipboard.writeText(`${origin}/register`);
     setCopiedLink(true);
     setTimeout(() => setCopiedLink(false), 2000);
   };
 
-  const handleCreateTestFriend = async () => {
-    setIsCreatingTestFriend(true);
-    try {
-      const randomNum = Math.floor(100 + Math.random() * 900);
-      const res = await fetch('/api/auth/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          username: `friend_${randomNum}`,
-          email: `friend_${randomNum}@adda.chat`,
-          full_name: `আড্ডা বন্ধু ${randomNum}`,
-          password: 'password123'
-        })
-      });
-      const data = await res.json();
-      if (data.user) {
-        const users = await api.listUsers();
-        setAvailableUsers(users);
-        await startDirectChat(data.user.id);
-      }
-    } catch (err) {
-      alert('Could not create test friend');
-    } finally {
-      setIsCreatingTestFriend(false);
-    }
-  };
 
   const openNewChat = async () => {
     setShowNewChatModal(true);
@@ -397,21 +365,23 @@ export function ChatList({
                       : '👉 Type this link in your mobile browser to join.'}
                   </p>
 
-                  <div className="w-full pt-2 border-t border-brand-border/60">
-                    <button
-                      type="button"
-                      onClick={handleCreateTestFriend}
-                      disabled={isCreatingTestFriend}
-                      className="w-full py-2 px-3 rounded-xl bg-[#202c33] hover:bg-[#2a3942] border border-brand-emerald/40 text-brand-emerald font-bold text-xs flex items-center justify-center gap-2 transition-all active:scale-95"
-                    >
-                      <Sparkles className="w-3.5 h-3.5" />
-                      <span>
-                        {isCreatingTestFriend
-                          ? (lang === 'bn' ? 'তৈরি হচ্ছে...' : 'Creating...')
-                          : (lang === 'bn' ? 'পিসিতে টেস্ট করার জন্য ডেমো বন্ধু যোগ করুন' : 'Add Test Contact to Chat Now')}
-                      </span>
-                    </button>
-                  </div>
+                  {onOpenDiscoverPeople && (
+                    <div className="w-full pt-2 border-t border-brand-border/60">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setShowNewChatModal(false);
+                          onOpenDiscoverPeople();
+                        }}
+                        className="w-full py-2.5 px-3 rounded-xl bg-gradient-to-r from-brand-emerald to-teal-400 text-brand-dark font-extrabold text-xs flex items-center justify-center gap-2 shadow-lg shadow-brand-emerald/20 transition-all active:scale-95"
+                      >
+                        <UserPlus className="w-4 h-4" />
+                        <span>
+                          {lang === 'bn' ? 'মানুষ ও বন্ধু খুঁজুন (কমিউনিটি)' : 'Discover People & Community'}
+                        </span>
+                      </button>
+                    </div>
+                  )}
                 </div>
               )}
             </div>

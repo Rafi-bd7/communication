@@ -389,25 +389,25 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                 </p>
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-2 gap-3.5">
                 <button
                   type="button"
                   onClick={() => { if (theme !== 'dark') toggleTheme(); }}
-                  className={`p-4 rounded-2xl border flex flex-col items-center justify-center gap-2.5 transition-all cursor-pointer ${
+                  className={`p-4 rounded-2xl border flex flex-col items-center justify-center gap-2.5 transition-all cursor-pointer card-3d ${
                     theme === 'dark'
-                      ? 'border-brand-emerald bg-brand-emerald/15 text-white ring-2 ring-brand-emerald/40 shadow-lg'
+                      ? 'border-brand-emerald bg-brand-emerald/15 text-white ring-2 ring-brand-emerald/40 shadow-xl scale-[1.02]'
                       : 'border-brand-border bg-[#202c33] text-gray-400 hover:text-white hover:border-gray-500'
                   }`}
                 >
-                  <div className={`p-2.5 rounded-full ${theme === 'dark' ? 'bg-brand-emerald/20 text-brand-emerald' : 'bg-gray-800 text-gray-400'}`}>
-                    <Moon className="w-5 h-5" />
+                  <div className={`p-3 rounded-2xl ${theme === 'dark' ? 'bg-brand-emerald/20 text-brand-emerald shadow-inner' : 'bg-gray-800 text-gray-400'}`}>
+                    <Moon className="w-5 h-5 animate-pulse-glow" />
                   </div>
                   <div className="text-center">
-                    <span className="font-bold text-xs block">{lang === 'bn' ? 'নাইট মোড' : 'Night (Dark)'}</span>
-                    <span className="text-[10px] text-gray-400 block mt-0.5">{lang === 'bn' ? 'গাঢ় কালার স্কিম' : 'Sleek dark theme'}</span>
+                    <span className="font-extrabold text-xs block">{lang === 'bn' ? '3D ডার্ক মোড' : '3D Dark Cyber'}</span>
+                    <span className="text-[10px] text-gray-400 block mt-0.5">{lang === 'bn' ? 'অবসিডিয়ান 3D গ্লাস ও নিয়ন' : 'Obsidian Cyber Depth'}</span>
                   </div>
                   {theme === 'dark' && (
-                    <span className="inline-flex items-center gap-1 text-[10px] text-brand-emerald font-semibold">
+                    <span className="inline-flex items-center gap-1 text-[10px] text-brand-emerald font-bold bg-brand-emerald/10 px-2 py-0.5 rounded-full border border-brand-emerald/30">
                       <Check className="w-3 h-3" /> {lang === 'bn' ? 'সক্রিয়' : 'Active'}
                     </span>
                   )}
@@ -416,21 +416,21 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                 <button
                   type="button"
                   onClick={() => { if (theme !== 'light') toggleTheme(); }}
-                  className={`p-4 rounded-2xl border flex flex-col items-center justify-center gap-2.5 transition-all cursor-pointer ${
+                  className={`p-4 rounded-2xl border flex flex-col items-center justify-center gap-2.5 transition-all cursor-pointer card-3d ${
                     theme === 'light'
-                      ? 'border-brand-emerald bg-brand-emerald/15 text-white ring-2 ring-brand-emerald/40 shadow-lg'
+                      ? 'border-brand-emerald bg-brand-emerald/15 text-white ring-2 ring-brand-emerald/40 shadow-xl scale-[1.02]'
                       : 'border-brand-border bg-[#202c33] text-gray-400 hover:text-white hover:border-gray-500'
                   }`}
                 >
-                  <div className={`p-2.5 rounded-full ${theme === 'light' ? 'bg-amber-400/20 text-amber-400' : 'bg-gray-800 text-gray-400'}`}>
-                    <Sun className="w-5 h-5" />
+                  <div className={`p-3 rounded-2xl ${theme === 'light' ? 'bg-amber-400/20 text-amber-400 shadow-inner' : 'bg-gray-800 text-gray-400'}`}>
+                    <Sun className="w-5 h-5 animate-pulse-glow" />
                   </div>
                   <div className="text-center">
-                    <span className="font-bold text-xs block">{lang === 'bn' ? 'ডে মোড' : 'Day (Light)'}</span>
-                    <span className="text-[10px] text-gray-400 block mt-0.5">{lang === 'bn' ? 'উজ্জ্বল কালার স্কিম' : 'Clean light theme'}</span>
+                    <span className="font-extrabold text-xs block">{lang === 'bn' ? '3D লাইট মোড' : '3D Light Ceramic'}</span>
+                    <span className="text-[10px] text-gray-400 block mt-0.5">{lang === 'bn' ? 'নিউমর্ফিক 3D সিরামিক' : 'Neumorphic Tactile'}</span>
                   </div>
                   {theme === 'light' && (
-                    <span className="inline-flex items-center gap-1 text-brand-emerald font-semibold text-[10px]">
+                    <span className="inline-flex items-center gap-1 text-brand-emerald font-bold text-[10px] bg-brand-emerald/10 px-2 py-0.5 rounded-full border border-brand-emerald/30">
                       <Check className="w-3 h-3" /> {lang === 'bn' ? 'সক্রিয়' : 'Active'}
                     </span>
                   )}

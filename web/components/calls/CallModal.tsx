@@ -114,22 +114,22 @@ export function CallModal({
   // 1. Incoming Call Prompt
   if (incomingCall && !activeCall) {
     return (
-      <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 select-none">
-        <div className="bg-brand-surface border border-brand-emerald/40 rounded-3xl p-6 max-w-sm w-full flex flex-col items-center shadow-2xl animate-fade-in text-white">
+      <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4 select-none">
+        <div className="bg-[#111b21] border border-brand-emerald/40 rounded-3xl p-6 max-w-sm w-full flex flex-col items-center card-3d-floating animate-fade-in text-white">
           <div className="relative mb-4">
             <UserAvatar
               name={incomingCall.caller.full_name}
               avatarUrl={incomingCall.caller.avatar_url}
               size="2xl"
-              className="ring-4 ring-brand-emerald shadow-2xl animate-pulse-subtle"
+              className="ring-4 ring-brand-emerald avatar-3d animate-pulse-glow"
             />
-            <span className="absolute -bottom-1 right-2 p-1.5 rounded-full bg-brand-emerald text-brand-dark shadow">
+            <span className="absolute -bottom-1 right-2 p-2 rounded-full bg-brand-emerald text-brand-dark shadow-lg btn-3d">
               {incomingCall.call_type === 'video' ? <Video className="w-4 h-4" /> : <Phone className="w-4 h-4" />}
             </span>
           </div>
 
-          <h3 className="font-semibold text-lg">{incomingCall.caller.full_name}</h3>
-          <p className="text-xs text-gray-400 mb-6">
+          <h3 className="font-extrabold text-lg">{incomingCall.caller.full_name}</h3>
+          <p className="text-xs text-gray-400 mb-6 font-medium">
             Incoming {incomingCall.call_type === 'video' ? 'Video' : 'Voice'} Call...
           </p>
 
@@ -137,7 +137,7 @@ export function CallModal({
             {/* Decline Button */}
             <button
               onClick={onDeclineCall}
-              className="w-14 h-14 rounded-full bg-red-600 hover:bg-red-700 text-white flex items-center justify-center shadow-lg hover:scale-105 active:scale-95 transition-all"
+              className="w-14 h-14 rounded-full bg-gradient-to-b from-red-500 to-red-700 text-white flex items-center justify-center shadow-lg btn-3d active:scale-95 transition-all"
               title="Decline"
             >
               <PhoneOff className="w-6 h-6" />
@@ -146,7 +146,7 @@ export function CallModal({
             {/* Accept Button */}
             <button
               onClick={onAcceptCall}
-              className="w-14 h-14 rounded-full bg-emerald-500 hover:bg-emerald-600 text-white flex items-center justify-center shadow-lg hover:scale-105 active:scale-95 transition-all animate-bounce"
+              className="w-14 h-14 rounded-full bg-gradient-to-b from-emerald-400 to-emerald-600 text-white flex items-center justify-center shadow-lg btn-3d active:scale-95 transition-all animate-bounce"
               title="Accept"
             >
               <Phone className="w-6 h-6" />
@@ -237,12 +237,12 @@ export function CallModal({
       </div>
 
       {/* Bottom Control Toolbar */}
-      <div className="p-6 flex items-center justify-center gap-4 z-20 bg-gradient-to-t from-black/90 to-transparent">
+      <div className="p-6 flex items-center justify-center gap-5 z-20 bg-gradient-to-t from-black/90 to-transparent">
         {/* Mute Button */}
         <button
           onClick={onToggleMute}
-          className={`w-12 h-12 rounded-full flex items-center justify-center shadow-lg transition-transform active:scale-95 ${
-            isMuted ? 'bg-red-500 text-white' : 'bg-white/20 text-white hover:bg-white/30'
+          className={`w-13 h-13 p-3.5 rounded-full flex items-center justify-center shadow-lg transition-transform active:scale-95 btn-3d ${
+            isMuted ? 'bg-red-500 text-white' : 'bg-white/20 text-white hover:bg-white/30 backdrop-blur-md'
           }`}
           title={isMuted ? 'Unmute' : 'Mute'}
         >
@@ -252,8 +252,8 @@ export function CallModal({
         {/* Video Toggle */}
         <button
           onClick={onToggleVideo}
-          className={`w-12 h-12 rounded-full flex items-center justify-center shadow-lg transition-transform active:scale-95 ${
-            isVideoOff ? 'bg-red-500 text-white' : 'bg-white/20 text-white hover:bg-white/30'
+          className={`w-13 h-13 p-3.5 rounded-full flex items-center justify-center shadow-lg transition-transform active:scale-95 btn-3d ${
+            isVideoOff ? 'bg-red-500 text-white' : 'bg-white/20 text-white hover:bg-white/30 backdrop-blur-md'
           }`}
           title={isVideoOff ? 'Turn Video On' : 'Turn Video Off'}
         >
@@ -263,8 +263,8 @@ export function CallModal({
         {/* Screen Share */}
         <button
           onClick={onToggleScreenShare}
-          className={`w-12 h-12 rounded-full flex items-center justify-center shadow-lg transition-transform active:scale-95 ${
-            isScreenSharing ? 'bg-brand-emerald text-brand-dark' : 'bg-white/20 text-white hover:bg-white/30'
+          className={`w-13 h-13 p-3.5 rounded-full flex items-center justify-center shadow-lg transition-transform active:scale-95 btn-3d ${
+            isScreenSharing ? 'bg-brand-emerald text-brand-dark' : 'bg-white/20 text-white hover:bg-white/30 backdrop-blur-md'
           }`}
           title={isScreenSharing ? 'Stop Sharing' : 'Share Screen'}
         >
@@ -274,7 +274,7 @@ export function CallModal({
         {/* End Call Button */}
         <button
           onClick={onEndCall}
-          className="w-14 h-14 rounded-full bg-red-600 hover:bg-red-700 text-white flex items-center justify-center shadow-2xl hover:scale-105 active:scale-95 transition-all"
+          className="w-14 h-14 rounded-full bg-gradient-to-b from-red-500 to-red-700 text-white flex items-center justify-center shadow-2xl hover:scale-105 active:scale-95 transition-all btn-3d"
           title="End Call"
         >
           <PhoneOff className="w-6 h-6" />

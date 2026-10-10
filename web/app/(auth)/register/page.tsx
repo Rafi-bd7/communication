@@ -87,13 +87,13 @@ export default function RegisterPage() {
         </button>
       </div>
 
-      <div className="w-full max-w-md bg-[#111b21] border border-[#2a3942] rounded-3xl p-8 shadow-2xl z-10 animate-fade-in flex flex-col text-white">
+      <div className="w-full max-w-md bg-[#111b21] border border-[#2a3942] rounded-3xl p-8 card-3d-floating z-10 animate-fade-in flex flex-col text-white">
         {/* Brand Header */}
         <div className="flex flex-col items-center text-center mb-6">
           <img
             src="/logo.png"
             alt="Adda Logo"
-            className="w-16 h-16 rounded-2xl object-cover shadow-2xl shadow-brand-emerald/30 border border-brand-emerald/40 mb-2.5"
+            className="w-16 h-16 rounded-2xl object-cover shadow-2xl shadow-brand-emerald/40 border border-brand-emerald/50 mb-2.5 card-3d hover:scale-105 transition-all"
           />
           <h1 className="text-2xl font-extrabold tracking-tight">
             {lang === 'bn' ? 'আড্ডায় যোগ দিন' : 'Create an Account'}
@@ -128,15 +128,15 @@ export default function RegisterPage() {
                 <img
                   src={avatarPreview || formData.avatar_url}
                   alt="Avatar preview"
-                  className="w-20 h-20 rounded-full object-cover border-2 border-brand-emerald shadow-lg group-hover:opacity-85 transition-opacity"
+                  className="w-20 h-20 rounded-full object-cover border-2 border-brand-emerald avatar-3d group-hover:opacity-85 transition-opacity"
                 />
               ) : (
-                <div className="w-20 h-20 rounded-full bg-[#202c33] border-2 border-dashed border-gray-500 group-hover:border-brand-emerald flex flex-col items-center justify-center text-gray-400 group-hover:text-brand-emerald transition-colors shadow-inner">
+                <div className="w-20 h-20 rounded-full bg-[#202c33] border-2 border-dashed border-gray-500 group-hover:border-brand-emerald flex flex-col items-center justify-center text-gray-400 group-hover:text-brand-emerald transition-colors card-3d">
                   <Camera className="w-6 h-6 mb-1" />
                   <span className="text-[10px] font-semibold">{lang === 'bn' ? 'ছবি দিন' : 'Add Photo'}</span>
                 </div>
               )}
-              <div className="absolute -bottom-1 -right-1 w-7 h-7 rounded-full bg-brand-emerald text-brand-dark flex items-center justify-center shadow-md">
+              <div className="absolute -bottom-1 -right-1 w-7 h-7 rounded-full bg-brand-emerald text-brand-dark flex items-center justify-center shadow-md btn-3d">
                 <Camera className="w-3.5 h-3.5" />
               </div>
             </div>
@@ -159,7 +159,7 @@ export default function RegisterPage() {
                 onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
                 placeholder=""
                 required
-                className="w-full bg-[#202c33] text-white text-sm rounded-xl pl-10 pr-3.5 py-2.5 border border-[#2a3942] focus:outline-none focus:border-brand-emerald transition-colors"
+                className="w-full bg-[#202c33] text-white text-sm rounded-xl pl-10 pr-3.5 py-2.5 border border-[#2a3942] input-3d focus:outline-none focus:border-brand-emerald transition-colors"
               />
             </div>
           </div>
@@ -174,7 +174,7 @@ export default function RegisterPage() {
               onChange={(e) => setFormData({ ...formData, username: e.target.value.toLowerCase().replace(/\s+/g, '') })}
               placeholder=""
               required
-              className="w-full bg-[#202c33] text-white text-sm rounded-xl px-3.5 py-2.5 border border-[#2a3942] focus:outline-none focus:border-brand-emerald transition-colors"
+              className="w-full bg-[#202c33] text-white text-sm rounded-xl px-3.5 py-2.5 border border-[#2a3942] input-3d focus:outline-none focus:border-brand-emerald transition-colors"
             />
           </div>
 
@@ -190,7 +190,7 @@ export default function RegisterPage() {
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                 placeholder=""
                 required
-                className="w-full bg-[#202c33] text-white text-sm rounded-xl pl-10 pr-3.5 py-2.5 border border-[#2a3942] focus:outline-none focus:border-brand-emerald transition-colors"
+                className="w-full bg-[#202c33] text-white text-sm rounded-xl pl-10 pr-3.5 py-2.5 border border-[#2a3942] input-3d focus:outline-none focus:border-brand-emerald transition-colors"
               />
             </div>
           </div>
@@ -208,7 +208,7 @@ export default function RegisterPage() {
                 placeholder=""
                 required
                 minLength={6}
-                className="w-full bg-[#202c33] text-white text-sm rounded-xl pl-10 pr-3.5 py-2.5 border border-[#2a3942] focus:outline-none focus:border-brand-emerald transition-colors"
+                className="w-full bg-[#202c33] text-white text-sm rounded-xl pl-10 pr-3.5 py-2.5 border border-[#2a3942] input-3d focus:outline-none focus:border-brand-emerald transition-colors"
               />
             </div>
           </div>
@@ -216,7 +216,7 @@ export default function RegisterPage() {
           <button
             type="submit"
             disabled={isLoading || uploadingAvatar}
-            className="mt-3 w-full py-3 rounded-xl bg-gradient-to-r from-brand-emerald to-emerald-400 hover:brightness-110 text-brand-dark font-bold text-sm shadow-lg shadow-brand-emerald/20 transition-all active:scale-95 disabled:opacity-50"
+            className="mt-3 w-full py-3.5 rounded-xl bg-gradient-to-r from-brand-emerald to-teal-400 text-brand-dark font-extrabold text-sm btn-3d disabled:opacity-50"
           >
             {isLoading
               ? (lang === 'bn' ? 'অ্যাকাউন্ট তৈরি হচ্ছে...' : 'Creating Account...')

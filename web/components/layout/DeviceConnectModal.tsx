@@ -72,12 +72,12 @@ export function DeviceConnectModal({ isOpen, onClose }: DeviceConnectModalProps)
 
   return (
     <div className="fixed inset-0 z-50 bg-black/90 backdrop-blur-md flex items-center justify-center p-4 select-none">
-      <div className="bg-[#111b21] border border-brand-emerald/30 rounded-3xl w-full max-w-md overflow-hidden shadow-2xl animate-fade-in text-white flex flex-col">
+      <div className="bg-[#111b21] border border-brand-emerald/30 rounded-3xl w-full max-w-md overflow-hidden card-3d-floating animate-fade-in text-white flex flex-col">
         
         {/* Header */}
         <div className="p-5 border-b border-brand-border flex items-center justify-between bg-[#152028]">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-brand-emerald to-teal-400 text-brand-dark flex items-center justify-center shadow-lg">
+            <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-brand-emerald to-teal-400 text-brand-dark flex items-center justify-center shadow-lg btn-3d">
               <Smartphone className="w-5 h-5" />
             </div>
             <div>

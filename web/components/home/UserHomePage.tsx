@@ -244,7 +244,7 @@ export function UserHomePage({
           </div>
 
           {/* 2. Facebook Style Post Composer (What's on your mind?) */}
-          <div className="bg-[#111b21] border border-brand-border rounded-3xl p-5 shadow-xl">
+          <div className="bg-[#111b21] border border-brand-border rounded-3xl p-5 card-3d shadow-xl">
             <form onSubmit={handleCreatePost} className="flex flex-col gap-4">
               <div className="flex items-start gap-3">
                 <div
@@ -256,6 +256,7 @@ export function UserHomePage({
                     name={user?.full_name || 'Me'}
                     avatarUrl={user?.avatar_url}
                     size="md"
+                    className="avatar-3d"
                   />
                 </div>
                 <div className="flex-1">
@@ -268,12 +269,12 @@ export function UserHomePage({
                         : `What's on your mind, ${user?.full_name?.split(' ')[0] || ''}?`
                     }
                     rows={3}
-                    className="w-full bg-[#182229] border border-brand-border/60 rounded-2xl p-3.5 text-xs text-white placeholder-gray-400 focus:outline-none focus:border-brand-emerald transition-colors resize-none"
+                    className="w-full bg-[#182229] border border-brand-border/60 rounded-2xl p-3.5 text-xs text-white placeholder-gray-400 input-3d transition-colors resize-none"
                   />
 
                   {/* Media Preview if attached */}
                   {mediaPreview && (
-                    <div className="mt-2 relative rounded-2xl overflow-hidden border border-brand-border max-h-56 bg-black flex items-center justify-center">
+                    <div className="mt-2 relative rounded-2xl overflow-hidden border border-brand-border max-h-56 bg-black flex items-center justify-center card-3d">
                       <img src={mediaPreview} alt="Preview" className="max-h-56 object-contain" />
                       <button
                         type="button"
@@ -301,14 +302,14 @@ export function UserHomePage({
                   <button
                     type="button"
                     onClick={() => fileInputRef.current?.click()}
-                    className="px-3 py-1.5 rounded-xl bg-[#202c33] hover:bg-[#2a3942] text-brand-emerald font-bold text-xs flex items-center gap-1.5 transition-colors"
+                    className="px-3.5 py-2 rounded-xl bg-[#202c33] hover:bg-[#2a3942] text-brand-emerald font-bold text-xs flex items-center gap-1.5 border border-brand-border/60 btn-3d-secondary transition-colors"
                   >
                     <ImageIcon className="w-4 h-4 text-emerald-400" />
                     <span>{lang === 'bn' ? 'ছবি যুক্ত করুন' : 'Photo'}</span>
                   </button>
 
                   {/* Privacy Selector (Public vs Friends) */}
-                  <div className="relative flex items-center bg-[#202c33] rounded-xl px-2.5 py-1 border border-brand-border/70 text-xs font-semibold text-gray-300">
+                  <div className="relative flex items-center bg-[#202c33] rounded-xl px-2.5 py-1.5 border border-brand-border/70 text-xs font-semibold text-gray-300 btn-3d-secondary">
                     {privacy === 'public' ? (
                       <Globe className="w-3.5 h-3.5 text-emerald-400 mr-1.5" />
                     ) : (
@@ -332,7 +333,7 @@ export function UserHomePage({
                 <button
                   type="submit"
                   disabled={isPublishing || (!postContent.trim() && !mediaFile)}
-                  className="px-5 py-2 rounded-xl bg-gradient-to-r from-brand-emerald to-emerald-400 text-brand-dark font-extrabold text-xs hover:brightness-110 shadow-lg shadow-brand-emerald/20 transition-all active:scale-95 disabled:opacity-40 flex items-center gap-1.5"
+                  className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-brand-emerald to-teal-400 text-brand-dark font-extrabold text-xs btn-3d disabled:opacity-40 flex items-center gap-1.5"
                 >
                   <Send className="w-3.5 h-3.5" />
                   <span>{isPublishing ? (lang === 'bn' ? 'পোস্ট হচ্ছে...' : 'Posting...') : (lang === 'bn' ? 'পোস্ট করুন' : 'Post')}</span>
@@ -367,7 +368,7 @@ export function UserHomePage({
                 return (
                   <div
                     key={post.id}
-                    className="bg-[#111b21] border border-brand-border rounded-3xl p-5 shadow-xl flex flex-col gap-3.5 transition-all hover:border-[#2a3942]"
+                    className="bg-[#111b21] border border-brand-border rounded-3xl p-5 card-3d card-3d-hover flex flex-col gap-3.5 transition-all"
                   >
                     {/* Post Header */}
                     <div className="flex items-center justify-between">
@@ -526,7 +527,7 @@ export function UserHomePage({
         <div className="lg:col-span-4 flex flex-col gap-6">
 
           {/* Quick Actions Card */}
-          <div className="bg-[#111b21] border border-brand-border rounded-3xl p-5 shadow-xl flex flex-col gap-3">
+          <div className="bg-[#111b21] border border-brand-border rounded-3xl p-5 card-3d flex flex-col gap-3">
             <h3 className="font-extrabold text-sm text-white flex items-center gap-2">
               <Zap className="w-4 h-4 text-brand-emerald" />
               <span>{lang === 'bn' ? 'ঝটপট ফিচার ও আড্ডা' : 'Quick Actions'}</span>
@@ -535,7 +536,7 @@ export function UserHomePage({
             <div className="grid grid-cols-2 gap-2.5">
               <button
                 onClick={onOpenQuickAdda}
-                className="p-3 rounded-2xl bg-gradient-to-tr from-brand-emerald/20 to-teal-500/10 border border-brand-emerald/40 hover:border-brand-emerald flex flex-col items-start gap-1 transition-all text-left"
+                className="p-3.5 rounded-2xl bg-gradient-to-tr from-brand-emerald/20 to-teal-500/10 border border-brand-emerald/40 hover:border-brand-emerald flex flex-col items-start gap-1 btn-3d-secondary transition-all text-left"
               >
                 <Zap className="w-5 h-5 text-brand-emerald" />
                 <span className="font-bold text-xs text-white">{lang === 'bn' ? 'ঝটপট আড্ডা' : 'Quick Adda'}</span>
@@ -544,7 +545,7 @@ export function UserHomePage({
 
               <button
                 onClick={onOpenDiscoverPeople}
-                className="p-3 rounded-2xl bg-[#182229] border border-brand-border hover:border-brand-emerald flex flex-col items-start gap-1 transition-all text-left"
+                className="p-3.5 rounded-2xl bg-[#182229] border border-brand-border hover:border-brand-emerald flex flex-col items-start gap-1 btn-3d-secondary transition-all text-left"
               >
                 <UserPlus className="w-5 h-5 text-blue-400" />
                 <span className="font-bold text-xs text-white">{lang === 'bn' ? 'বন্ধু খুঁজুন' : 'Find Friends'}</span>
@@ -554,7 +555,7 @@ export function UserHomePage({
           </div>
 
           {/* Active Contacts / Friends (Messenger Style) */}
-          <div className="bg-[#111b21] border border-brand-border rounded-3xl p-5 shadow-xl flex flex-col gap-4">
+          <div className="bg-[#111b21] border border-brand-border rounded-3xl p-5 card-3d flex flex-col gap-4">
             <div className="flex items-center justify-between">
               <h3 className="font-extrabold text-sm text-white flex items-center gap-2">
                 <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping" />

@@ -76,12 +76,12 @@ export function QuickAddaModal({ isOpen, onClose, onRoomCreated }: QuickAddaModa
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 select-none">
-      <div className="bg-[#111b21] border border-brand-border rounded-3xl w-full max-w-lg overflow-hidden shadow-2xl animate-fade-in text-white flex flex-col max-h-[90vh]">
+    <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4 select-none">
+      <div className="bg-[#111b21] border border-brand-border rounded-3xl w-full max-w-lg overflow-hidden card-3d-floating animate-fade-in text-white flex flex-col max-h-[90vh]">
         {/* Modal Header */}
         <div className="p-5 border-b border-brand-border flex items-center justify-between bg-[#182229]">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-brand-emerald to-emerald-400 text-brand-dark flex items-center justify-center shadow-lg shadow-brand-emerald/20 font-bold">
+            <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-brand-emerald to-emerald-400 text-brand-dark flex items-center justify-center shadow-lg shadow-brand-emerald/20 font-bold btn-3d">
               <Zap className="w-5 h-5 fill-current" />
             </div>
             <div>
@@ -109,7 +109,7 @@ export function QuickAddaModal({ isOpen, onClose, onRoomCreated }: QuickAddaModa
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder={t.roomNamePlaceholder}
-              className="w-full bg-[#202c33] border border-brand-border rounded-2xl px-4 py-3 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-brand-emerald transition-colors"
+              className="w-full bg-[#202c33] border border-brand-border rounded-2xl px-4 py-3 text-sm text-white placeholder-gray-500 input-3d transition-colors"
               autoFocus
             />
           </div>
@@ -127,8 +127,8 @@ export function QuickAddaModal({ isOpen, onClose, onRoomCreated }: QuickAddaModa
                   onClick={() => setSelectedTopic(topic.id)}
                   className={`py-2.5 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all ${
                     selectedTopic === topic.id
-                      ? 'bg-brand-emerald text-brand-dark shadow-md shadow-brand-emerald/20 scale-[1.02]'
-                      : 'bg-[#202c33] text-gray-300 hover:bg-[#2a3942] border border-brand-border'
+                      ? 'bg-gradient-to-r from-brand-emerald to-teal-400 text-brand-dark btn-3d'
+                      : 'bg-[#202c33] text-gray-300 hover:bg-[#2a3942] border border-brand-border btn-3d-secondary'
                   }`}
                 >
                   <span>{topic.icon}</span>
@@ -212,7 +212,7 @@ export function QuickAddaModal({ isOpen, onClose, onRoomCreated }: QuickAddaModa
             <button
               type="submit"
               disabled={isSubmitting || !name.trim()}
-              className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-brand-emerald to-emerald-400 text-brand-dark font-bold text-xs flex items-center gap-2 hover:brightness-110 active:scale-95 disabled:opacity-50 transition-all shadow-md shadow-brand-emerald/20"
+              className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-brand-emerald to-emerald-400 text-brand-dark font-extrabold text-xs flex items-center gap-2 btn-3d disabled:opacity-50"
             >
               <Zap className="w-4 h-4 fill-current" />
               <span>{isSubmitting ? t.loading : t.createRoomBtn}</span>

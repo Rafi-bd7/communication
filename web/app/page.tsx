@@ -13,14 +13,18 @@ import {
   CheckCheck,
   Mail,
   MapPin,
-  Contact
+  Contact,
+  Sun,
+  Moon
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useLanguage } from '@/lib/i18n';
+import { useTheme } from '@/hooks/useTheme';
 
 export default function HomePage() {
   const { user } = useAuth();
   const { t, lang, toggleLanguage } = useLanguage();
+  const { theme, toggleTheme } = useTheme();
   const [isPlayingAudio, setIsPlayingAudio] = useState(false);
 
   return (
@@ -57,9 +61,22 @@ export default function HomePage() {
 
           {/* Right Action Buttons */}
           <div className="flex items-center gap-3">
+            {/* Theme Toggle Button */}
+            <button
+              onClick={toggleTheme}
+              className={`p-2 rounded-xl border flex items-center justify-center transition-all shadow-md active:scale-95 ${
+                theme === 'dark'
+                  ? 'bg-[#111b21] hover:bg-[#202c33] border-brand-border text-amber-300'
+                  : 'bg-white hover:bg-slate-100 border-indigo-200 text-indigo-600'
+              }`}
+              title={theme === 'dark' ? '3D Light Mode' : '3D Dark Mode'}
+            >
+              {theme === 'dark' ? <Sun className="w-4 h-4 animate-pulse-glow" /> : <Moon className="w-4 h-4 animate-pulse-glow" />}
+            </button>
+
             <button
               onClick={toggleLanguage}
-              className="px-3.5 py-1.5 rounded-xl bg-[#111b21] hover:bg-[#202c33] border border-brand-border text-xs font-bold text-brand-emerald flex items-center gap-1.5 shadow-sm transition-all hover:scale-105"
+              className="px-3.5 py-1.5 rounded-xl bg-[#111b21] hover:bg-[#202c33] border border-brand-border text-xs font-bold text-brand-emerald flex items-center gap-1.5 shadow-sm transition-all hover:scale-105 btn-3d-secondary"
               title="Change Language"
             >
               <Languages className="w-3.5 h-3.5" />
@@ -135,10 +152,10 @@ export default function HomePage() {
           </p>
 
           {/* Call to Action Buttons */}
-          <div className="mt-8 flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto">
+          <div className="mt-8 flex flex-col sm:flex-row items-center gap-3.5 w-full sm:w-auto">
             <Link
               href="/register"
-              className="w-full sm:w-auto px-7 py-3.5 rounded-2xl bg-gradient-to-r from-brand-emerald via-emerald-400 to-teal-300 hover:brightness-110 text-brand-dark font-extrabold text-sm shadow-xl shadow-brand-emerald/25 transition-all flex items-center justify-center gap-2 active:scale-95 group"
+              className="w-full sm:w-auto px-8 py-4 rounded-2xl bg-gradient-to-r from-brand-emerald via-emerald-400 to-teal-300 text-brand-dark font-extrabold text-sm btn-3d flex items-center justify-center gap-2 group"
             >
               <span>{lang === 'bn' ? 'আড্ডা শুরু করুন' : 'Get Started Free'}</span>
               <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
@@ -146,17 +163,17 @@ export default function HomePage() {
 
             <Link
               href="/login"
-              className="w-full sm:w-auto px-7 py-3.5 rounded-2xl bg-[#111b21] hover:bg-[#202c33] border border-brand-border text-white font-bold text-sm transition-all flex items-center justify-center shadow-md hover:border-gray-500"
+              className="w-full sm:w-auto px-8 py-4 rounded-2xl bg-[#111b21] hover:bg-[#202c33] border border-brand-border text-white font-bold text-sm btn-3d-secondary flex items-center justify-center"
             >
               {lang === 'bn' ? 'লগইন করুন' : 'Sign In'}
             </Link>
           </div>
 
-          {/* 3. Live App Mockup (Matching 2nd Screenshot) */}
-          <div className="mt-12 w-full max-w-4xl text-left relative">
-            <div className="absolute -inset-1 bg-gradient-to-r from-brand-emerald/30 via-teal-500/20 to-purple-600/30 rounded-[30px] blur-xl opacity-70" />
+          {/* 3. Live App Mockup with 3D Depth */}
+          <div className="mt-14 w-full max-w-4xl text-left relative">
+            <div className="absolute -inset-1.5 bg-gradient-to-r from-brand-emerald/40 via-teal-500/30 to-purple-600/40 rounded-[32px] blur-2xl opacity-75 animate-pulse-glow" />
 
-            <div className="relative rounded-[26px] bg-[#111b21] border border-brand-border/90 shadow-2xl overflow-hidden">
+            <div className="relative rounded-[28px] bg-[#111b21] border border-brand-border/90 card-3d-floating overflow-hidden">
               {/* Window Header */}
               <div className="bg-[#0b141a] px-5 py-3 border-b border-brand-border flex items-center justify-between">
                 <div className="flex items-center gap-2">

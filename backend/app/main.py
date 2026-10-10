@@ -35,27 +35,19 @@ async def lifespan(app: FastAPI):
     logger.info("Initializing database...")
     await init_db()
 
-    # Automatically seed an initial admin account only if none exist
+    # Ensure no auto-seeded or dummy accounts pollute user list
     try:
         async with AsyncSessionLocal() as session:
-            user_res = await session.execute(select(User).limit(1))
-            if not user_res.scalar_one_or_none():
-                logger.info("Initializing system administrator account...")
-                pwd_hash = get_password_hash("admin123")
-                admin_user = User(
-                    username="admin",
-                    email="admin@adda.chat",
-                    full_name="সিস্টেম অ্যাডমিন",
-                    hashed_password=pwd_hash,
-                    bio="আড্ডা প্ল্যাটফর্ম অ্যাডমিনিস্ট্রেটর 🛡️",
-                    is_admin=True,
-                    avatar_url=None
-                )
-                session.add(admin_user)
+            legacy_admin = await session.execute(
+                select(User).where(User.username == "admin", User.email == "admin@adda.chat")
+            )
+            admin_obj = legacy_admin.scalar_one_or_none()
+            if admin_obj:
+                await session.delete(admin_obj)
                 await session.commit()
-                logger.info("Admin account initialized (username: admin, password: admin123)")
+                logger.info("Cleaned up legacy auto-created admin account.")
     except Exception as e:
-        logger.warning(f"Admin seeding note: {e}")
+        logger.warning(f"Account cleanup check note: {e}")
 
     yield
     logger.info("Shutting down Adda communication platform backend...")

@@ -199,10 +199,10 @@ export function MessageBubble({ message, onReply, onEdit, onDelete, onReact, onB
 
         {/* Message Bubble Container */}
         <div
-          className={`px-3.5 py-2 rounded-2xl shadow-sm relative ${
+          className={`px-3.5 py-2 rounded-2xl relative card-3d ${
             isMe
-              ? 'bg-brand-bubbleOutgoing text-white rounded-tr-none'
-              : 'bg-brand-bubbleIncoming text-gray-100 rounded-tl-none border border-brand-border/40'
+              ? 'bg-brand-bubbleOutgoing text-white rounded-tr-none shadow-md'
+              : 'bg-brand-bubbleIncoming text-gray-100 rounded-tl-none border border-brand-border/40 shadow-md'
           }`}
         >
           {/* Group Chat Sender Name */}

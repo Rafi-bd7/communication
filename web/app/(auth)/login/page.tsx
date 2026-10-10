@@ -146,16 +146,16 @@ export default function LoginPage() {
       </div>
 
       {/* Main Container */}
-      <div className="w-full max-w-md bg-[#111b21] border border-[#2a3942] rounded-3xl p-8 shadow-2xl z-10 animate-fade-in flex flex-col text-white">
-        {/* Brand Header */}
+      <div className="w-full max-w-md bg-[#111b21] border border-[#2a3942] rounded-3xl p-8 card-3d-floating z-10 animate-fade-in flex flex-col text-white">
+        {/* Brand Header with 3D Pop */}
         <div className="flex flex-col items-center text-center mb-7">
           <img
             src="/logo.png"
             alt="Adda Logo"
-            className="w-20 h-20 rounded-3xl object-cover shadow-2xl shadow-brand-emerald/30 border border-brand-emerald/40 mb-3"
+            className="w-20 h-20 rounded-3xl object-cover shadow-2xl shadow-brand-emerald/40 border border-brand-emerald/50 mb-3 card-3d hover:scale-105 transition-all"
           />
           <h1 className="text-3xl font-extrabold tracking-tight text-white">{t.brandName}</h1>
-          <p className="text-xs font-medium text-brand-emerald mt-1">{t.brandTagline}</p>
+          <p className="text-xs font-bold text-brand-emerald mt-1 tracking-wide">{t.brandTagline}</p>
           <p className="text-[11px] text-gray-400 mt-0.5">{t.brandSubtitle}</p>
         </div>
 
@@ -177,7 +177,7 @@ export default function LoginPage() {
                 onChange={(e) => setUsernameOrEmail(e.target.value)}
                 placeholder={lang === 'bn' ? 'ইউজারনেম বা ইমেইল লিখুন' : 'username or email'}
                 required
-                className="w-full bg-[#202c33] text-white text-sm rounded-xl pl-10 pr-4 py-2.5 border border-[#2a3942] focus:outline-none focus:border-brand-emerald transition-colors"
+                className="w-full bg-[#202c33] text-white text-sm rounded-xl pl-10 pr-4 py-2.5 border border-[#2a3942] input-3d focus:outline-none focus:border-brand-emerald transition-colors"
               />
             </div>
           </div>
@@ -206,7 +206,7 @@ export default function LoginPage() {
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
                 required
-                className="w-full bg-[#202c33] text-white text-sm rounded-xl pl-10 pr-4 py-2.5 border border-[#2a3942] focus:outline-none focus:border-brand-emerald transition-colors"
+                className="w-full bg-[#202c33] text-white text-sm rounded-xl pl-10 pr-4 py-2.5 border border-[#2a3942] input-3d focus:outline-none focus:border-brand-emerald transition-colors"
               />
             </div>
           </div>
@@ -214,7 +214,7 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={isLoading}
-            className="mt-2 w-full py-3 rounded-xl bg-gradient-to-r from-brand-emerald to-emerald-400 hover:brightness-110 text-brand-dark font-bold text-sm shadow-lg shadow-brand-emerald/20 transition-all active:scale-95 disabled:opacity-50"
+            className="mt-2 w-full py-3.5 rounded-xl bg-gradient-to-r from-brand-emerald to-teal-400 text-brand-dark font-extrabold text-sm btn-3d disabled:opacity-50"
           >
             {isLoading ? t.loading : t.loginBtn}
           </button>

@@ -2,63 +2,158 @@
 @tailwind components;
 @tailwind utilities;
 
-/* ── Dark Mode (Default) ─────────────────────────────── */
+/* ══════════════════════════════════════════════════════════════════
+   3D THEME SYSTEM: DARK OBSIDIAN CYBER & LIGHT CERAMIC NEUMORPHIC
+   ══════════════════════════════════════════════════════════════════ */
+
+/* ── Dark Mode (Default) ────────────────────────────────────────── */
 :root,
 html.dark-mode {
-  --background: #0b141a;
+  --background: #070d12;
   --foreground: #e9edef;
-  --surface: #111b21;
-  --surface-2: #202c33;
-  --surface-3: #2a3942;
-  --border: #2a3942;
+  --surface: #0e171f;
+  --surface-2: #16222b;
+  --surface-3: #1e2e3a;
+  --border: #233441;
+  --border-light: rgba(255, 255, 255, 0.08);
   --text-primary: #e9edef;
-  --text-secondary: #aebac1;
-  --text-muted: #667781;
-  --brand: #00a884;
+  --text-secondary: #94a3b8;
+  --text-muted: #64748b;
+  --brand: #00d09c;
+  --brand-glow: rgba(0, 208, 156, 0.35);
   --bubble-out: #005c4b;
-  --bubble-in: #202c33;
-  --scrollbar: #2a3942;
-  --scrollbar-hover: #374248;
+  --bubble-in: #192731;
+  --scrollbar: #1e2e3a;
+  --scrollbar-hover: #2b3e4d;
+
+  /* 3D Shadows & Depth */
+  --shadow-3d-base: 0 10px 30px -5px rgba(0, 0, 0, 0.7), 0 4px 12px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  --shadow-3d-floating: 0 20px 40px -10px rgba(0, 0, 0, 0.8), 0 8px 16px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  --shadow-3d-button: 0 4px 0 #007a5f, 0 8px 18px rgba(0, 208, 156, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.35);
+  --shadow-3d-button-press: 0 1px 0 #007a5f, 0 2px 8px rgba(0, 208, 156, 0.25);
+  --shadow-3d-secondary-btn: 0 3px 0 #0a131a, 0 6px 14px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  --shadow-3d-inset: inset 0 2px 6px rgba(0, 0, 0, 0.65), 0 1px 0 rgba(255, 255, 255, 0.06);
 }
 
-/* ── Light Mode ──────────────────────────────────────── */
+/* ── Light Mode (3D Neumorphic / Ceramic) ───────────────────────── */
 html.light-mode {
-  --background: #f0f2f5;
-  --foreground: #111b21;
+  --background: #edf1f7;
+  --foreground: #0f172a;
   --surface: #ffffff;
-  --surface-2: #f0f2f5;
-  --surface-3: #e9edef;
-  --border: #d1d7db;
-  --text-primary: #111b21;
-  --text-secondary: #3b4a54;
-  --text-muted: #667781;
+  --surface-2: #f1f4f9;
+  --surface-3: #e2e8f0;
+  --border: #cbd5e1;
+  --border-light: rgba(255, 255, 255, 0.9);
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
+  --text-muted: #64748b;
   --brand: #00a884;
-  --bubble-out: #d9fdd3;
+  --brand-glow: rgba(0, 168, 132, 0.3);
+  --bubble-out: #d8f7d0;
   --bubble-in: #ffffff;
-  --scrollbar: #d1d7db;
-  --scrollbar-hover: #aebac1;
+  --scrollbar: #cbd5e1;
+  --scrollbar-hover: #94a3b8;
+
+  /* 3D Shadows & Depth: Dual-Tone Neumorphic */
+  --shadow-3d-base: 8px 8px 20px rgba(165, 178, 198, 0.55), -8px -8px 20px rgba(255, 255, 255, 0.95), inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  --shadow-3d-floating: 12px 16px 32px rgba(165, 178, 198, 0.65), -10px -10px 28px rgba(255, 255, 255, 1), inset 0 1px 0 rgba(255, 255, 255, 0.95);
+  --shadow-3d-button: 0 4px 0 #007a5f, 0 8px 16px rgba(0, 168, 132, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.45);
+  --shadow-3d-button-press: 0 1px 0 #007a5f, 0 2px 6px rgba(0, 168, 132, 0.2);
+  --shadow-3d-secondary-btn: 4px 4px 10px rgba(165, 178, 198, 0.45), -4px -4px 10px rgba(255, 255, 255, 0.9), inset 0 1px 0 rgba(255, 255, 255, 0.85);
+  --shadow-3d-inset: inset 3px 3px 7px rgba(165, 178, 198, 0.5), inset -3px -3px 7px rgba(255, 255, 255, 0.85);
 }
 
-/* ── Base Apply ──────────────────────────────────────── */
+/* ── Base Setup ─────────────────────────────────────────────────── */
 html {
   scroll-behavior: smooth;
+  height: 100%;
 }
 
 body {
   color: var(--text-primary);
   background: var(--background);
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Inter', 'Helvetica Neue', Arial, sans-serif;
   min-height: 100vh;
   width: 100%;
   overflow-x: hidden;
-  overflow-y: auto;
   user-select: none;
-  transition: background 0.3s ease, color 0.3s ease;
+  transition: background-color 0.3s cubic-bezier(0.4, 0, 0.2, 1), color 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* ── Light Mode Overrides for bg- classes ─────────────── */
+/* ── 3D Visual Depth Utility Classes ────────────────────────────── */
+.card-3d {
+  box-shadow: var(--shadow-3d-base);
+  border: 1px solid var(--border-light);
+  transition: transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.22s ease;
+}
+
+.card-3d-hover:hover {
+  transform: translateY(-3px) scale(1.008);
+  box-shadow: var(--shadow-3d-floating);
+}
+
+.card-3d-floating {
+  box-shadow: var(--shadow-3d-floating);
+  border: 1px solid var(--border-light);
+}
+
+/* Tactile 3D Action Button */
+.btn-3d {
+  box-shadow: var(--shadow-3d-button);
+  transition: transform 0.12s ease, box-shadow 0.12s ease, filter 0.15s ease;
+  will-change: transform, box-shadow;
+}
+
+.btn-3d:hover {
+  filter: brightness(1.08);
+}
+
+.btn-3d:active {
+  transform: translateY(3px);
+  box-shadow: var(--shadow-3d-button-press);
+}
+
+/* Tactile Secondary Button */
+.btn-3d-secondary {
+  box-shadow: var(--shadow-3d-secondary-btn);
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+}
+
+.btn-3d-secondary:active {
+  transform: translateY(2px);
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.2);
+}
+
+/* Chiseled 3D Inset Input Field */
+.input-3d {
+  box-shadow: var(--shadow-3d-inset);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.input-3d:focus {
+  outline: none;
+  border-color: var(--brand) !important;
+  box-shadow: var(--shadow-3d-inset), 0 0 0 2px var(--brand-glow);
+}
+
+/* 3D Embossed Avatar with Luminous Rim */
+.avatar-3d {
+  box-shadow: 0 8px 18px -4px rgba(0, 0, 0, 0.45), inset 0 1px 1px rgba(255, 255, 255, 0.25);
+  transition: transform 0.2s ease;
+}
+
+.avatar-3d:hover {
+  transform: scale(1.06);
+}
+
+/* 3D Floating Glass Bevels */
+.bevel-top {
+  border-top: 1px solid var(--border-light);
+}
+
+/* ── Light Mode Automatic Adaptations ───────────────────────────── */
 html.light-mode .bg-\[#0b141a\] { background-color: var(--background) !important; }
-html.light-mode .bg-\[#111b21\] { background-color: var(--surface) !important; }
+html.light-mode .bg-\[#111b21\] { background-color: var(--surface) !important; box-shadow: 4px 0 15px rgba(0,0,0,0.03); }
 html.light-mode .bg-\[#202c33\] { background-color: var(--surface-2) !important; }
 html.light-mode .bg-\[#182229\] { background-color: var(--surface-2) !important; }
 html.light-mode .bg-\[#2a3942\] { background-color: var(--surface-3) !important; }
@@ -66,33 +161,46 @@ html.light-mode .bg-brand-dark { background-color: var(--surface) !important; }
 html.light-mode .bg-brand-surface { background-color: var(--surface) !important; }
 
 html.light-mode .text-white { color: var(--text-primary) !important; }
-html.light-mode .text-gray-400 { color: var(--text-secondary) !important; }
-html.light-mode .text-gray-300 { color: var(--text-primary) !important; }
-html.light-mode .text-gray-500 { color: var(--text-muted) !important; }
+html.light-mode .text-gray-300 { color: #1e293b !important; }
+html.light-mode .text-gray-400 { color: #475569 !important; }
+html.light-mode .text-gray-500 { color: #64748b !important; }
 html.light-mode .text-\[#e9edef\] { color: var(--text-primary) !important; }
 
 html.light-mode .border-brand-border { border-color: var(--border) !important; }
 html.light-mode .border-\[#2a3942\] { border-color: var(--border) !important; }
 
-/* ── Chat Bubbles in Light Mode ───────────────────────── */
-html.light-mode .bg-\[#005c4b\] { background-color: var(--bubble-out) !important; color: #111b21 !important; }
-html.light-mode .bg-\[#202c33\] .text-white { color: var(--text-primary) !important; }
+/* Light Mode Chat Bubbles */
+html.light-mode .bg-\[#005c4b\],
+html.light-mode .bg-brand-bubbleOutgoing {
+  background: linear-gradient(135deg, #dcf8c6 0%, #c4f3ad 100%) !important;
+  color: #0f172a !important;
+  box-shadow: 2px 4px 10px rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.9) !important;
+}
 
-/* Message input area */
-html.light-mode input, html.light-mode textarea {
+html.light-mode .bg-brand-bubbleIncoming,
+html.light-mode .bg-\[#202c33\] .text-white {
+  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%) !important;
+  color: #0f172a !important;
+  box-shadow: 2px 4px 10px rgba(0, 0, 0, 0.05), inset 0 1px 0 rgba(255, 255, 255, 1) !important;
+}
+
+/* Light Mode Input Elements */
+html.light-mode input, 
+html.light-mode textarea {
   color: var(--text-primary) !important;
-  background: var(--surface-2) !important;
+  background-color: var(--surface-2) !important;
+  border-color: var(--border) !important;
 }
 
-/* ── Smooth transition ────────────────────────────────── */
-html, body, aside, main, div, header, nav, button, input, textarea, span {
-  transition: background-color 0.25s ease, border-color 0.25s ease, color 0.25s ease;
+html.light-mode input::placeholder,
+html.light-mode textarea::placeholder {
+  color: #94a3b8 !important;
 }
 
-/* ── Scrollbar ────────────────────────────────────────── */
+/* ── Scrollbars ─────────────────────────────────────────────────── */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 7px;
+  height: 7px;
 }
 
 ::-webkit-scrollbar-track {
@@ -102,6 +210,8 @@ html, body, aside, main, div, header, nav, button, input, textarea, span {
 ::-webkit-scrollbar-thumb {
   background: var(--scrollbar);
   border-radius: 9999px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
 }
 
 ::-webkit-scrollbar-thumb:hover {
@@ -111,17 +221,26 @@ html, body, aside, main, div, header, nav, button, input, textarea, span {
 .no-scrollbar::-webkit-scrollbar {
   display: none;
 }
-
 .no-scrollbar {
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
 
-/* ── Animations ─────────────────────────────────────── */
-@keyframes fade-in {
-  from { opacity: 0; transform: translateY(8px); }
-  to   { opacity: 1; transform: translateY(0); }
+/* ── Keyframe Animations ────────────────────────────────────────── */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px) scale(0.99); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
 }
+
+@keyframes pulseGlow {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.7; transform: scale(1.05); }
+}
+
 .animate-fade-in {
-  animation: fade-in 0.18s ease both;
+  animation: fadeIn 0.22s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.animate-pulse-glow {
+  animation: pulseGlow 2.5s infinite ease-in-out;
 }
